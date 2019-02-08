@@ -1,4 +1,4 @@
-from travel_backpack import *
+from travel_backpack import log_info
 import win32con
 import win32api
 import win32gui
