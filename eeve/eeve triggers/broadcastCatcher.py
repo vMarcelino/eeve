@@ -145,6 +145,7 @@ def run():
     global running
     if running:
         return
+    running = True
     log_info("*** STARTING ***")
     running = True
     hinst = win32api.GetModuleHandle(None)
@@ -197,6 +198,19 @@ if __name__ == "__main__":
     run()
 
 
+def thread_run():
+
+    import travel_backpack
+    travel_backpack.threadpool(run)()
+
+    return
+    global running
+    if not running:
+        running = True
+        import travel_backpack
+        travel_backpack.threadpool(run)()
+
+
 class DisplayOff:
     def __init__(self, action, status):
         if status == 'on':
@@ -205,25 +219,21 @@ class DisplayOff:
             display_off_callbacks.append(action)
         elif status == 'dimmed':
             display_dim_callbacks.append(action)
-
-        import helpers
-        helpers.threadpool(run)()
+        thread_run()
 
 
 class SessionEnd:
     def __init__(self, action):
         session_end_callbacks.append(action)
 
-        import helpers
-        helpers.threadpool(run)()
+        thread_run()
 
 
 class SystemSuspend:
     def __init__(self, action):
         sys_suspend_callbacks.append(action)
 
-        import helpers
-        helpers.threadpool(run)()
+        thread_run()
 
 
 triggers = {'display': DisplayOff, 'session end': SessionEnd, 'system suspend': SystemSuspend}
