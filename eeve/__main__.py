@@ -1,2 +1,3 @@
-from . import main
+from eeve import main
+
 main()
