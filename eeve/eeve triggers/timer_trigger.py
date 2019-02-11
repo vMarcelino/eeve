@@ -19,9 +19,9 @@ class TimerTrigger:
     def __init__(self, action, t, *args, **kwargs):
         self.args = args
         self.action = action
-        print('Loadinnnnnnn')
+        #print('Loadinnnnnnn')
         self.run(int(t))
-        print('loadeded')
+        #print('loadeded')
 
     def unregister(self):
         self.callback = None
@@ -32,7 +32,7 @@ class TimerTrigger:
         while True:
             time.sleep(t)
             print('triggering action')
-            self.action()
+            self.action(time=t)
 
 
 triggers = {'timer': TimerTrigger}

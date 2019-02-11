@@ -17,17 +17,21 @@ def threadpool(f, executor=None):
 
 import subprocess
 
+# made this way just as an example of a dict instead of a class
 
-class StartProcessAction:
-    def __init__(self, *args, windowed=False, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        if windowed:
-            kwargs['creationflags'] = subprocess.CREATE_NEW_CONSOLE
-
-    def run(self):
-        print('start process:', self.args, self.kwargs)
-        subprocess.Popen(self.args, **self.kwargs)
+d = {'args': None, 'kwargs': None}
 
 
-actions = {'start process': StartProcessAction}
+def init(self, *args, windowed=False, **kwargs):
+    d['args'] = args
+    d['kwargs'] = kwargs
+    if windowed:
+        kwargs['creationflags'] = subprocess.CREATE_NEW_CONSOLE
+
+
+def run(self):
+    print('start process:', d['args'], d['kwargs'])
+    subprocess.Popen(d['args'], **d['kwargs'])
+
+
+actions = {'start process': {'init': init, 'run': run}}

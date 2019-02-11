@@ -1,10 +1,13 @@
+[test]timer: 2 -> test action: init param 1, init param 2, init_par1=True, init_par2=False, init_par3= teste teste | trigger_result=$return_result, run param 1, run param2, run_par1=True, run_par2=False, run_par3= teste teste 
 
-display: off   -> set power plan: Power saver
+#display: off   -> set power plan: Power saver
 
-display: on    -> start process: cmd, /C, echo oi&&pause, windowed=True
-display: on    -> set power plan: Balanced
-display: on    -> rest request: GET, http://192.168.10.11:2280/surveilance/stop, wait_time=1
+#display: on    -> start process: cmd, /C, echo oi&&pause, windowed=True
+#display: on    -> set power plan: Balanced
+#display: on    -> rest request: GET, http://192.168.10.11:2280/surveilance/stop, wait_time=1
 
-session end    -> rest request: GET, http://192.168.10.11:2280/surveilance/start
+#session end    -> rest request: GET, http://192.168.10.11:2280/surveilance/start
 
-system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/star
+#system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/start
+
+device connect  -> send device command: device_name=$device_name, on=False
