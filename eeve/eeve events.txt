@@ -1,0 +1,10 @@
+
+display: off   -> set power plan: Power saver
+
+display: on    -> start process: cmd, /C, echo oi&&pause, windowed=True
+display: on    -> set power plan: Balanced
+display: on    -> rest request: GET, http://192.168.10.11:2280/surveilance/stop, wait_time=1
+
+session end    -> rest request: GET, http://192.168.10.11:2280/surveilance/start
+
+system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/star

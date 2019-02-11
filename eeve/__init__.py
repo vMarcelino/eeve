@@ -12,22 +12,16 @@ from eeve.importer import import_from_folder
 
 all_triggers, all_actions = {}, {}
 
-#yapf: disable
-all_events = [
-    'display: off   -> set power plan: Power saver',
-
-    'display: on    -> start process: cmd, /C, echo oi&&pause, windowed=True',
-    'display: on    -> set power plan: Balanced', 'display: on -> rest request: GET, http://192.168.10.11:2280/surveilance/stop, wait_time=1',
-
-    'session end    -> rest request: GET, http://192.168.10.11:2280/surveilance/start',
-    'system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/start'
-]
-#yapf: enable
-
 
 def main():
     script_root = os.path.dirname(os.path.realpath(__file__))
-    modules = import_from_folder(os.path.join(script_root, 'eeve triggers'))
+    load_triggers(os.path.join(script_root, 'eeve triggers'))
+    load_actions(os.path.join(script_root, 'eeve actions'))
+    load_events(os.path.join(script_root, 'eeve events.txt'))
+
+
+def load_triggers(path):
+    modules = import_from_folder(path)
     for module in modules:
         try:
             triggers = getattr(module, 'triggers', None)
@@ -38,7 +32,9 @@ def main():
             print('invalid action module:', ex)
     print('--all triggers loaded--')
 
-    modules = import_from_folder(os.path.join(script_root, 'eeve actions'))
+
+def load_actions(path):
+    modules = import_from_folder(path)
     for module in modules:
         try:
             actions = getattr(module, 'actions', None)
@@ -49,31 +45,37 @@ def main():
             print('invalid action module:', ex)
     print('--all actions loaded--')
 
+
+def load_events(path):
+    with open(path) as f:
+        all_events = f.read().split('\n')
+
     for event in all_events:
-        print('loading', event)
-        try:
-            trigger, action = helpers.strip_split(event, '->', maxsplit=1)
+        if event and not event.startswith('#'):
+            print(f'loading [{event}]')
+            try:
+                trigger, action = helpers.strip_split(event, '->', maxsplit=1)
 
-            def process_args(x):
-                args = []
-                kwargs = {}
-                if ':' in x:
-                    x, _args = helpers.strip_split(x, ':', maxsplit=1)
-                    _args = helpers.strip_split(_args, ',')
-                    for arg in _args:
-                        if '=' in arg:
-                            k, v = helpers.strip_split(arg, '=', maxsplit=1)
-                            kwargs[k] = helpers.get_true_value(v)
-                        else:
-                            args.append(helpers.get_true_value(arg))
+                def process_args(x):
+                    args = []
+                    kwargs = {}
+                    if ':' in x:
+                        x, _args = helpers.strip_split(x, ':', maxsplit=1)
+                        _args = helpers.strip_split(_args, ',')
+                        for arg in _args:
+                            if '=' in arg:
+                                k, v = helpers.strip_split(arg, '=', maxsplit=1)
+                                kwargs[k] = helpers.get_true_value(v)
+                            else:
+                                args.append(helpers.get_true_value(arg))
 
-                return x, args, kwargs
+                    return x, args, kwargs
 
-            trigger, trigger_args, trigger_kwargs = process_args(trigger)
-            action, action_args, action_kwargs = process_args(action)
+                trigger, trigger_args, trigger_kwargs = process_args(trigger)
+                action, action_args, action_kwargs = process_args(action)
 
-            action = all_actions[action](*action_args, **action_kwargs)
-            all_triggers[trigger](travel_backpack.except_and_print(action.run), *trigger_args, **trigger_kwargs)
-        except Exception as ex:
-            print('invalid event:', ex)
+                action = all_actions[action](*action_args, **action_kwargs)
+                all_triggers[trigger](travel_backpack.except_and_print(action.run), *trigger_args, **trigger_kwargs)
+            except Exception as ex:
+                print('invalid event:', ex)
     print('--all events loaded--')
