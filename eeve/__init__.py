@@ -9,6 +9,7 @@ import os
 
 import eeve.helpers as helpers
 from eeve.importer import import_from_folder
+from eeve.wrapper import action_wrapper
 
 all_triggers, all_actions = {}, {}
 
@@ -52,30 +53,38 @@ def load_events(path):
 
     for event in all_events:
         if event and not event.startswith('#'):
+            show_traceback = False
             print(f'loading [{event}]')
+            if event.startswith('[test]'):
+                show_traceback = True
+                event = event[len('[test]'):]
             try:
-                trigger, action = helpers.strip_split(event, '->', maxsplit=1)
+                trigger, action_name = helpers.strip_split(event, '->', maxsplit=1)
 
-                def process_args(x):
-                    args = []
-                    kwargs = {}
-                    if ':' in x:
-                        x, _args = helpers.strip_split(x, ':', maxsplit=1)
-                        _args = helpers.strip_split(_args, ',')
-                        for arg in _args:
-                            if '=' in arg:
-                                k, v = helpers.strip_split(arg, '=', maxsplit=1)
-                                kwargs[k] = helpers.get_true_value(v)
-                            else:
-                                args.append(helpers.get_true_value(arg))
+                trigger, trigger_args, trigger_kwargs = helpers.process_args(trigger, return_init_args=False)
+                action_name, action_init_args, action_init_kwargs, action_run_args, action_run_kwargs = helpers.process_args(
+                    action_name, return_init_args=True)
 
-                    return x, args, kwargs
+                _action = all_actions[action_name]
+                action_init = None
+                action_run = None
+                if type(_action) is dict:
+                    action_init = _action.get('init', None)
+                    action_run = _action['run']
 
-                trigger, trigger_args, trigger_kwargs = process_args(trigger)
-                action, action_args, action_kwargs = process_args(action)
+                else:
+                    action_init = _action
 
-                action = all_actions[action](*action_args, **action_kwargs)
-                all_triggers[trigger](travel_backpack.except_and_print(action.run), *trigger_args, **trigger_kwargs)
+                action_init = action_init(*action_init_args, **action_init_kwargs)
+                if action_run is None:
+                    action_run = action_init.run
+
+                action_run = action_wrapper(action_run, action_run_args, action_run_kwargs)
+                action_run = travel_backpack.except_and_print(action_run)
+
+                all_triggers[trigger](action_run, *trigger_args, **trigger_kwargs)
+
             except Exception as ex:
-                print('invalid event:', ex)
+                print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
+
     print('--all events loaded--')
