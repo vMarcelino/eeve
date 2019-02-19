@@ -1,2 +1,2 @@
 # eeve
-A flexible, powerfull and simple event trigger
+A flexible, powerful and simple event trigger
