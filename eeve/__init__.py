@@ -18,6 +18,10 @@ def main():
     script_root = os.path.dirname(os.path.realpath(__file__))
     load_triggers(os.path.join(script_root, 'eeve triggers'))
     load_actions(os.path.join(script_root, 'eeve actions'))
+
+    load_triggers(os.path.join(script_root, 'eeve plugins'))
+    load_actions(os.path.join(script_root, 'eeve plugins'))
+
     load_events(os.path.join(script_root, 'eeve events.txt'))
 
 
@@ -75,11 +79,12 @@ def load_events(path):
                 else:
                     action_init = _action
 
-                action_init = action_init(*action_init_args, **action_init_kwargs)
+                if action_init is not None:
+                    action_init = action_init(*action_init_args, **action_init_kwargs)
                 if action_run is None:
                     action_run = action_init.run
 
-                action_run = action_wrapper(action_run, action_run_args, action_run_kwargs)
+                action_run = action_wrapper(action_run, action_run_args, action_run_kwargs, debug=show_traceback)
                 action_run = travel_backpack.except_and_print(action_run)
 
                 all_triggers[trigger](action_run, *trigger_args, **trigger_kwargs)
