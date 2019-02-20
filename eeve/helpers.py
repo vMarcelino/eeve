@@ -15,8 +15,10 @@ def get_true_value(x):
         return int(x)
     elif try_cast(float, x):
         return float(x)
-    elif x.lower in ['true', 'false']:
-        return bool(x)
+    elif x.lower() == 'true':
+        return True
+    elif x.lower() == 'false':
+        return False
     else:
         return x
 
