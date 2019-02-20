@@ -2,7 +2,7 @@ from functools import wraps
 from copy import deepcopy
 
 
-def action_wrapper(f, run_args, run_kwargs):
+def action_wrapper(f, run_args, run_kwargs, debug=False):
     @wraps(f)
     def decorator(**kwargs):
         _run_args = deepcopy(run_args)
@@ -16,12 +16,13 @@ def action_wrapper(f, run_args, run_kwargs):
                     _run_args[i] = kwargs.get(arg[1:], arg)
 
         for k, v in _run_kwargs.items():
-            if v.startswith('$'):
+            if type(v) is str and v.startswith('$'):
                 if v == '$return_result':
                     _run_kwargs[k] = kwargs
                 else:
                     _run_kwargs[k] = kwargs.get(v[1:], v)
-
+        if debug:
+            print('call args:', _run_args, _run_kwargs)
         return f(*_run_args, **_run_kwargs)
 
     return decorator
