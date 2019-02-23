@@ -15,6 +15,10 @@ def action_wrapper(actions: list, debug=False):
             _run_args = deepcopy(action.run_args)
             _run_kwargs = deepcopy(action.run_kwargs)
             for i, arg in enumerate(_run_args):
+                if arg.startswith('$$$'):
+                    _run_args[i] = local_variables.get(arg[3:], arg)
+                if arg.startswith('$$'):
+                    _run_args[i] = local_variables.get(arg[2:], arg)
                 if arg.startswith('$'):
                     if arg == '$return_result':
                         _run_args[i] = local_variables
