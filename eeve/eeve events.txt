@@ -1,4 +1,5 @@
 #[test]timer: 2 -> test action: init param 1, init param 2, init_par1=True, init_par2=False, init_par3= teste teste | trigger_result=$return_result, run param 1, run param2, run_par1=True, run_par2=False, run_par3= teste teste 
+timer: 5 -> test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index
 
 #display: off   -> set power plan: Power saver
 
@@ -10,4 +11,4 @@
 
 #system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/start
 
-[test]TP-Link device: connect  -> set TP-Link device property: device=$device, brightness=1, is_on=False
+#[test]TP-Link device: connect  -> set TP-Link device property: device=$device, brightness=1, is_on=False
