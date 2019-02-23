@@ -11,6 +11,7 @@ import eeve.helpers as helpers
 from eeve.importer import import_from_folder
 from eeve.wrapper import action_wrapper
 from eeve.action import Action
+import eeve.mappings as mappings
 
 all_triggers, all_actions = {}, {}
 
@@ -64,11 +65,11 @@ def load_events(path):
                 show_traceback = True
                 event = event[len('[test]'):]
             try:
-                trigger, raw_actions = helpers.strip_split(event, '->', maxsplit=1)
+                trigger, raw_actions = helpers.strip_split(mappings.remap(event), mappings.char_map['->'], maxsplit=1)
 
                 trigger, trigger_args, trigger_kwargs = helpers.process_args(trigger, return_init_args=False)
 
-                raw_actions = helpers.strip_split(raw_actions, ';')
+                raw_actions = helpers.strip_split(raw_actions, mappings.char_map[';'])
                 actions = []
                 for action in raw_actions:
                     action_name, action_init_args, action_init_kwargs, action_run_args, action_run_kwargs = helpers.process_args(
