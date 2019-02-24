@@ -1,5 +1,16 @@
+from dataclasses import dataclass
+from typing import Union, Any, Callable
+
+
+@dataclass
 class Action:
-    def __init__(self, f, run_args, run_kwargs):
-        self.func = f
-        self.run_args = run_args
-        self.run_kwargs = run_kwargs
+    func: Callable
+    name: str
+    run_args: Union[list, tuple]
+    run_kwargs: dict
+    init_result: Any = None
+    task_info_getter: Callable = None
+
+    def update_task_info(self, task_info):
+        if self.task_info_getter is not None:
+            self.task_info_getter(self.init_result, task_info)

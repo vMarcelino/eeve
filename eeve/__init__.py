@@ -65,7 +65,8 @@ def load_events(path):
                 show_traceback = True
                 event = event[len('[test]'):]
             try:
-                trigger, raw_actions = helpers.strip_split(mappings.remap(event), mappings.char_map['->'], maxsplit=1)
+                event = mappings.remap(event)
+                trigger, raw_actions = helpers.strip_split(event, mappings.char_map['->'], maxsplit=1)
 
                 trigger, trigger_args, trigger_kwargs = helpers.process_args(trigger, return_init_args=False)
 
@@ -76,23 +77,29 @@ def load_events(path):
                         action, return_init_args=True)
 
                     _action = all_actions[action_name]
-                    action_init = None
+                    action_init_result = None
                     action_run = None
+                    action_task_info_getter = None
+
                     if type(_action) is dict:
-                        action_init = _action.get('init', None)
-                        action_run = _action['run']
+                        if 'class' in _action:
+                            action_init_result = _action['class'](*action_init_args, **action_init_kwargs)
+                            action_run = action_init_result.run
+                        else:
+                            if 'init' in _action:
+                                action_init_result = _action['init'](*action_init_args, **action_init_kwargs)
+                            action_run = _action['run']
 
-                    else:
-                        action_init = _action
-
-                    if action_init is not None:
-                        action_init(*action_init_args, **action_init_kwargs)
-
-                    if action_run is None:
-                        action_run = action_init.run
+                        action_task_info_getter = _action.get('task_info', None)
 
                     action_run = travel_backpack.except_and_print(action_run)
-                    act = Action(action_run, action_run_args, action_run_kwargs)
+                    act = Action(
+                        func=action_run,
+                        run_args=action_run_args,
+                        run_kwargs=action_run_kwargs,
+                        init_result=action_init_result,
+                        task_info_getter=action_task_info_getter,
+                        name=action_name)
                     actions.append(act)
                     #action_run = action_wrapper(action_run, action_run_args, action_run_kwargs, debug=show_traceback)
 
