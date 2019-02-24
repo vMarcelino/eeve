@@ -16,9 +16,10 @@ def threadpool(f, executor=None):
 
 
 class TimerTrigger:
-    def __init__(self, action, t, *args, **kwargs):
+    def __init__(self, action, t, *args, start=False, **kwargs):
         self.args = args
         self.action = action
+        self.start = start
         #print('Loadinnnnnnn')
         self.run(int(t))
         #print('loadeded')
@@ -29,6 +30,9 @@ class TimerTrigger:
     @threadpool
     def run(self, t):
         import time
+        if self.start:
+            self.action(time=t)
+
         while True:
             time.sleep(t)
             print('triggering action')
