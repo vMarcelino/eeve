@@ -1,26 +1,29 @@
-import uuid
+#import uuid
 import re
-u = lambda: str(uuid.uuid4()).replace('-', '')
+#u = lambda: str(uuid.uuid4()).replace('-', '')
 
 special_chars = [':', '->', '=', ',', ';', '|']
-char_map = {c: u() for c in special_chars}
-char_map = {k: f'<[{k}]>' for k in char_map}
-slash = u()
+
+weird_chars = 'ᨀᨁᨂᨃᨄᨅᨆᨇᨈ'
+
+char_map = {c: weird_chars[i] for i, c in enumerate(special_chars)}
+slash = 'Ø'
 
 
 def remap(e):
     for char in char_map:
-        print('searching  ', char)
+        #print('searching  ', char)
 
         def sub(pat):
-            print('found:', '[', pat[0], ']')
+            #print('found:', '[', pat[0], ']')
 
             return pat[0][0] + char_map[char]
 
         c = char.replace('|', r'\|').replace('$', r'\$')
-        e = re.sub(fr"[^({slash})]{c}", sub, e)
-        print(e)
-        print()
+        pattern = fr"[^({slash})]{c}"
+        e = re.sub(pattern, sub, e)
+        #print(e)
+        #print()
     return e
 
 
