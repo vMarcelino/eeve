@@ -8,6 +8,7 @@ class SmartDeviceContainer:
         self.device = dev
         self.hw_id = self.device.hw_info['hwId']
         self.alias = self.device.alias
+        self.disconnect_count = 0
 
     def __hash__(self):
         h = hash(self.hw_id)
@@ -30,17 +31,7 @@ def repr(self):
     return self.alias
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-
-        return cls._instances[cls]
-
-
-class Discoverer(metaclass=Singleton):
+class Discoverer(metaclass=travel_backpack.Singleton):
     def __init__(self):
         print('inited')
         self.timeout = 1
@@ -71,21 +62,31 @@ class Discoverer(metaclass=Singleton):
                 except:
                     pass
 
+            offline_devices = current_device_set - new_device_set
+            #print('offline devices:'.ljust(18), (offline_devices) or '-')
+            for dev in offline_devices:
+                if dev.disconnect_count > 3:
+                    print(dev, 'disconnected')
+                    for e in self.single_disconnect_event:
+                        e(device=dev.device)
+                else:
+                    dev.disconnect_count += 1
+                    print(dev, dev.disconnect_count)
+                    new_device_set.add(dev)
+
+            offline_devices = current_device_set - new_device_set
+            for e in self.multi_disconnect_event:
+                e(device_list=[d.device for d in offline_devices])
+
             new_devices = new_device_set - current_device_set
             #print('new_devices:'.ljust(18), (new_devices) or '-')
             for e in self.multi_connect_event:
                 e(device_list=[d.device for d in new_devices])
             for dev in new_devices:
+                print(dev, 'connected')
+                dev.disconnect_count = 0
                 for e in self.single_connect_event:
-                    e(device=dev.device)
-
-            offline_devices = current_device_set - new_device_set
-            #print('offline devices:'.ljust(18), (offline_devices) or '-')
-            for e in self.multi_disconnect_event:
-                e(device_list=[d.device for d in offline_devices])
-            for dev in offline_devices:
-                for e in self.single_disconnect_event:
-                    e(device=dev.device)
+                    e(device=dev.device, is_on=dev.device.is_on)
 
             #print('noch:'.ljust(18), (new_device_set & current_device_set) or '-')
             current_device_set = new_device_set
