@@ -54,6 +54,9 @@ def process_args(command_string, return_init_args):
 
         split_args(temp_run_args, run_args, run_kwargs)
 
+    else:
+        command_name = command_string
+
     if return_init_args:
         return command_name, init_args, init_kwargs, run_args, run_kwargs
     else:
