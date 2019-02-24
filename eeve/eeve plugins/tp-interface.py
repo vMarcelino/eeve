@@ -27,10 +27,6 @@ class SmartDeviceContainer:
         return alias
 
 
-def repr(self):
-    return self.alias
-
-
 class Discoverer(metaclass=travel_backpack.Singleton):
     def __init__(self):
         print('inited')
@@ -45,9 +41,10 @@ class Discoverer(metaclass=travel_backpack.Singleton):
 
         self.discoverer_thread = self.discoverer()
 
-    def set_params(self, timeout, time_between_pings):
+    def set_params(self, timeout, time_between_pings, threshold):
         self.timeout = timeout
         self.time_between_pings = time_between_pings
+        self.threshold = threshold
 
     @travel_backpack.threadpool
     def discoverer(self):
@@ -65,13 +62,13 @@ class Discoverer(metaclass=travel_backpack.Singleton):
             offline_devices = current_device_set - new_device_set
             #print('offline devices:'.ljust(18), (offline_devices) or '-')
             for dev in offline_devices:
-                if dev.disconnect_count > 3:
+                if dev.disconnect_count > self.threshold:
                     print(dev, 'disconnected')
                     for e in self.single_disconnect_event:
                         e(device=dev.device)
                 else:
                     dev.disconnect_count += 1
-                    print(dev, dev.disconnect_count)
+                    print(dev.alias, 'hwid:', dev.hw_id, 'id:', id(dev), 'dcnts:', dev.disconnect_count)
                     new_device_set.add(dev)
 
             offline_devices = current_device_set - new_device_set
@@ -84,7 +81,6 @@ class Discoverer(metaclass=travel_backpack.Singleton):
                 e(device_list=[d.device for d in new_devices])
             for dev in new_devices:
                 print(dev, 'connected')
-                dev.disconnect_count = 0
                 for e in self.single_connect_event:
                     e(device=dev.device, is_on=dev.device.is_on)
 
@@ -94,7 +90,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
             time.sleep(self.time_between_pings)
 
 
-def register_trigger(action, trigger_status, mult='single', timeout=3, time_between_pings=3):
+def register_trigger(action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=3):
     d = Discoverer()
     if trigger_status == 'connect':
         if mult == 'single':
@@ -106,6 +102,8 @@ def register_trigger(action, trigger_status, mult='single', timeout=3, time_betw
             d.single_disconnect_event.append(action)
         elif mult == 'multi':
             d.multi_disconnect_event.append(action)
+
+    d.set_params(timeout=timeout, time_between_pings=time_between_pings, threshold=threshold)
 
 
 def set_device_property(device, brightness=None, temperature=None, is_on=None):
