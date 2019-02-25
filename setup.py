@@ -15,20 +15,15 @@ def read(filename):
 
 setup(
     name="eeve",
-    version="0.1.0",
+    version="0.2.0",
     url="https://github.com/vMarcelino/eeve",
     license='MIT',
-
     author="Victor Marcelino",
     author_email="victor.fmarcelino@gmail.com",
-
     description="A flexible, powerfull and simple event trigger",
     long_description=read("README.rst"),
-
-    packages=find_packages(exclude=('tests',)),
-
+    packages=find_packages(exclude=('tests', )),
     install_requires=[],
-
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: MIT License',
