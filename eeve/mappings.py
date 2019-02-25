@@ -11,6 +11,7 @@ slash = 'Ø'
 
 
 def remap(e):
+    e = replace_slashes(e)
     for char in char_map:
         #print('searching  ', char)
 
@@ -24,7 +25,23 @@ def remap(e):
         e = re.sub(pattern, sub, e)
         #print(e)
         #print()
-    return e
+    return e.replace(slash, '')
+
+
+def replace_slashes(s):
+    replaces = []
+    mx = len(s)
+    i = 0
+    while i < mx:
+        if s[i] == '\\':
+            replaces.append(i)
+            i += 1
+
+        i += 1
+
+    for r in reversed(replaces):
+        s = s[:r] + slash + s[r + 1:]
+    return s
 
 
 # test
