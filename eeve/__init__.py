@@ -92,6 +92,11 @@ def load_events(path):
 
                         action_task_info_getter = _action.get('task_info', None)
 
+                    else:
+                        action_init_result = _action(*action_init_args, **action_init_kwargs)
+                        action_run = action_init_result.run
+
+                    #print(action_run)
                     action_run = travel_backpack.except_and_print(action_run)
                     act = Action(
                         func=action_run,
