@@ -43,14 +43,11 @@ if __name__ == '__main__':
 
 
 class SetPowerPlan:
-    def __init__(self, plan_name):
-        self.plan_name = plan_name
-
-    def run(self):
+    def run(self, plan_name):
         _, active_plan = get_power_plan_info(print_to_screen=False)
         print("Last power plan:", active_plan)
 
-        set_power_plan(self.plan_name)
+        set_power_plan(plan_name)
 
         _, active_plan = get_power_plan_info(print_to_screen=False)
         print("Current power plan:", active_plan)

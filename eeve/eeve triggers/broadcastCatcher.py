@@ -213,6 +213,7 @@ def thread_run():
 
 class DisplayOff:
     def __init__(self, action, status):
+        #print(action)
         if status == 'on':
             display_on_callbacks.append(action)
         elif status == 'off':
