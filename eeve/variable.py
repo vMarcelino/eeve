@@ -26,6 +26,11 @@ class VariableGroup:
             self.__setitem__(key=k, value=v)
 
     def get(self, var, default=None):
+        if var.startswith('var'):
+            var = var[3:]
+        while var.startswith('$'):
+            var = var[1:]
+
         if var in self.vars:
             return self[var]
         else:
