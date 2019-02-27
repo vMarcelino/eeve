@@ -21,3 +21,7 @@ class Request:
 
 
 actions = {'rest request': Request}
+
+if __name__ == '__main__':
+    import sys
+    Request().run(*sys.argv[1:])
