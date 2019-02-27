@@ -32,6 +32,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
         print('inited')
         self.timeout = 1
         self.time_between_pings = 0
+        self.threshold = 10
 
         self.single_connect_event = []
         self.single_disconnect_event = []
@@ -90,7 +91,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
             time.sleep(self.time_between_pings)
 
 
-def register_trigger(action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=3):
+def register_trigger(action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=5):
     d = Discoverer()
     if trigger_status == 'connect':
         if mult == 'single':
