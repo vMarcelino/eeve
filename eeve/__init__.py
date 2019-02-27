@@ -11,9 +11,11 @@ import eeve.helpers as helpers
 from eeve.importer import import_from_folder
 from eeve.wrapper import action_wrapper
 from eeve.action import Action
+from eeve.event import Event
 import eeve.mappings as mappings
 
 all_triggers, all_actions = {}, {}
+all_events = []
 
 
 def main():
@@ -24,7 +26,19 @@ def main():
     load_triggers(os.path.join(script_root, 'eeve plugins'))
     load_actions(os.path.join(script_root, 'eeve plugins'))
 
-    load_events(os.path.join(script_root, 'eeve events.txt'))
+    with open(os.path.join(script_root, 'eeve events.txt')) as f:
+        _all_events = f.read().split('\n')
+    load_events(_all_events)
+
+
+def unload_trigger(trigger_name):
+    if trigger_name in all_triggers:
+        del all_triggers[trigger_name]
+
+
+def unload_action(action_name):
+    if action_name in all_actions:
+        del all_actions[action_name]
 
 
 def load_triggers(path):
@@ -34,7 +48,10 @@ def load_triggers(path):
             triggers = getattr(module, 'triggers', None)
             for trigger_name, trigger in triggers.items():
                 print('loading', trigger_name)
-                all_triggers[trigger_name] = trigger
+                if type(trigger) is dict:
+                    all_triggers[trigger_name] = trigger
+                else:
+                    all_triggers[trigger_name] = {'register': trigger, 'unregister': trigger.unregister}
         except Exception as ex:
             print('invalid action module:', ex)
     print('--all triggers loaded--')
@@ -53,11 +70,9 @@ def load_actions(path):
     print('--all actions loaded--')
 
 
-def load_events(path):
-    with open(path) as f:
-        all_events = f.read().split('\n')
+def load_events(_all_events: list):
 
-    for event in all_events:
+    for event in _all_events:
         if event and not event.startswith('#'):
             show_traceback = False
             print(f'loading [{event}]')
@@ -109,7 +124,9 @@ def load_events(path):
                     #action_run = action_wrapper(action_run, action_run_args, action_run_kwargs, debug=show_traceback)
 
                 task = action_wrapper(actions, debug=show_traceback)
-                all_triggers[trigger](task, *trigger_args, **trigger_kwargs)
+                event = Event(all_triggers[trigger]['unregister'])
+                event.trigger_output_result = all_triggers[trigger]['register'](task, *trigger_args, **trigger_kwargs)
+                all_events.append(event)
 
             except Exception as ex:
                 print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
