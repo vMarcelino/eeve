@@ -14,26 +14,26 @@ log_info = lambda info: h_log_info(info, file='System.log')
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
-display_on_callbacks = []
-display_off_callbacks = []
-display_dim_callbacks = []
-session_end_callbacks = []
-sys_suspend_callbacks = []
+display_on_callbacks = dict()
+display_off_callbacks = dict()
+display_dim_callbacks = dict()
+session_end_callbacks = dict()
+sys_suspend_callbacks = dict()
 
 
 def display_change(data):
     mapping = {0: 'off', 1: 'on', 2: 'dimmed'}
     status = mapping[data]
     if status == 'on':
-        for c in display_on_callbacks:
+        for c in display_on_callbacks.values():
             print('fon')
             c()
     elif status == 'off':
-        for c in display_off_callbacks:
+        for c in display_off_callbacks.values():
             print('foff')
             c()
     elif status == 'dimmed':
-        for c in display_dim_callbacks:
+        for c in display_dim_callbacks.values():
             print('fdim')
             c()
 
@@ -87,7 +87,7 @@ def process_power_broadcast(lparam):
 
 
 def system_suspend(x):
-    for c in sys_suspend_callbacks:
+    for c in sys_suspend_callbacks.values():
         print('fssus')
         c()
     log_info('System suspend')
@@ -119,7 +119,7 @@ def wndproc(hwnd, msg, wparam, lparam):
         return True
 
     elif msg == win32con.WM_QUERYENDSESSION:
-        for c in session_end_callbacks:
+        for c in session_end_callbacks.values():
             print('fsend')
             c()
         for k, v in end_session_lParams.items():
@@ -211,30 +211,42 @@ def thread_run():
         travel_backpack.threadpool(run)()
 
 
-class DisplayOff:
+class Display:
     def __init__(self, action, status):
+        from uuid import uuid4
+        self.uuid = uuid4()
+        self.mappings = {'on': display_on_callbacks, 'off': display_off_callbacks, 'dimmed': display_dim_callbacks}
+        self.status = status
         #print(action)
-        if status == 'on':
-            display_on_callbacks.append(action)
-        elif status == 'off':
-            display_off_callbacks.append(action)
-        elif status == 'dimmed':
-            display_dim_callbacks.append(action)
+        self.mappings[self.status][self.uuid] = action
         thread_run()
+
+    def unregister(self):
+        del self.mappings[self.status][self.uuid]
 
 
 class SessionEnd:
     def __init__(self, action):
-        session_end_callbacks.append(action)
+        from uuid import uuid4
+        self.uuid = uuid4()
+        session_end_callbacks[self.uuid] = action
 
         thread_run()
+
+    def unregister(self):
+        del session_end_callbacks[self.uuid]
 
 
 class SystemSuspend:
     def __init__(self, action):
-        sys_suspend_callbacks.append(action)
+        from uuid import uuid4
+        self.uuid = uuid4()
+        sys_suspend_callbacks[self.uuid] = action
 
         thread_run()
 
+    def unregister(self):
+        del sys_suspend_callbacks[self.uuid]
 
-triggers = {'display': DisplayOff, 'session end': SessionEnd, 'system suspend': SystemSuspend}
+
+triggers = {'display': Display, 'session end': SessionEnd, 'system suspend': SystemSuspend}
