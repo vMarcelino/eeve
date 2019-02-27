@@ -16,27 +16,31 @@ def threadpool(f, executor=None):
 
 
 class TimerTrigger:
-    def __init__(self, action, t, *args, start=False, **kwargs):
-        self.args = args
+    def __init__(self, action, t, start=False, max=0, **kwargs):
+        #print('Loadinnnnnnn')
         self.action = action
         self.start = start
-        #print('Loadinnnnnnn')
         self.run(int(t))
+        self.max_i = max
         #print('loadeded')
 
     def unregister(self):
-        self.callback = None
+        self.action = None
 
     @threadpool
     def run(self, t):
         import time
-        if self.start:
-            self.action(time=t)
 
-        while True:
+        i = 0
+        while self.action and (i < self.max_i or self.max_i == 0):
+            if not self.start:
+                self.start = True
+            else:
+                print('triggering action')
+                self.action(time=t, trigger_count=i + 1)
+
             time.sleep(t)
-            print('triggering action')
-            self.action(time=t)
+            i += 1
 
 
 triggers = {'timer': TimerTrigger}
