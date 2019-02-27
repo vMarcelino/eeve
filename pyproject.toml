@@ -9,7 +9,7 @@ homepage = "https://github.com/vMarcelino/eeve"
 
 [tool.poetry.dependencies]
 python = ">=3.6"
-travel-backpack = ">=0.3.0"
+travel-backpack = ">=0.4.0"
 
 [tool.poetry.dev-dependencies]
 
