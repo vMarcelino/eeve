@@ -10,16 +10,16 @@ def import_from_folder(folder):
         sys.path.insert(0, folder)
 
     for file_obj in os.listdir(folder):
-        print('inspecting', file_obj)
-        file_obj = os.path.join(folder, file_obj)
-        if os.path.isfile(file_obj):
-            if file_obj.endswith('.py'):
+        if file_obj not in ['.', '..', '__pycache__']:
+            print('inspecting', file_obj)
+            file_obj = os.path.join(folder, file_obj)
+            if os.path.isfile(file_obj):
                 module_name = os.path.splitext(os.path.basename(file_obj))[0]
+                #module_name = os.path.basename(file_obj)
                 print('==> importing', module_name)
                 imported_files.append(importlib.import_module(module_name))
 
-        elif os.path.isdir(file_obj):
-            if os.path.basename(file_obj) not in ['.', '..', '__pycache__']:
+            elif os.path.isdir(file_obj):
                 module_name = os.path.basename(file_obj)
                 print('--> importing', module_name)
                 imported_files.append(importlib.import_module(module_name))

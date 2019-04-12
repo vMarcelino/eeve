@@ -27,9 +27,11 @@ class TaskInfo:
 
         scope = Scopes.Local
 
+        # remove 'var' prefix if is variable reference
         if is_var:
             var_name = var_name[3:]
 
+        # define scope and remove all prefixing '$', being variable reference or just variable value
         if var_name.startswith('$$$'):
             scope = Scopes.Global
             var_name = var_name[3:]
@@ -40,6 +42,7 @@ class TaskInfo:
             scope = Scopes.Local
             var_name = var_name[1:]
 
+        # return variable ref or value
         if is_var:
             if var_name == 'vars':
                 return scope.vars

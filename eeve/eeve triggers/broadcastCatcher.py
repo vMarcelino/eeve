@@ -1,4 +1,4 @@
-from travel_backpack import log_info
+from travel_backpack import log_info as li
 import win32con
 import win32api
 import win32gui
@@ -9,8 +9,7 @@ from ctypes.wintypes import HANDLE, DWORD
 from datetime import datetime as dt
 now = dt.now
 
-h_log_info = log_info
-log_info = lambda info: h_log_info(info, file='System.log')
+log_info = lambda info: li(info, file='System.log', print_time=False)
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
@@ -26,15 +25,15 @@ def display_change(data):
     status = mapping[data]
     if status == 'on':
         for c in display_on_callbacks.values():
-            print('fon')
+            #print('fon')
             c()
     elif status == 'off':
         for c in display_off_callbacks.values():
-            print('foff')
+            #print('foff')
             c()
     elif status == 'dimmed':
         for c in display_dim_callbacks.values():
-            print('fdim')
+            #print('fdim')
             c()
 
     return "Display " + status
@@ -88,7 +87,7 @@ def process_power_broadcast(lparam):
 
 def system_suspend(x):
     for c in sys_suspend_callbacks.values():
-        print('fssus')
+        #print('fssus')
         c()
     log_info('System suspend')
 
@@ -120,8 +119,10 @@ def wndproc(hwnd, msg, wparam, lparam):
 
     elif msg == win32con.WM_QUERYENDSESSION:
         for c in session_end_callbacks.values():
-            print('fsend')
+            #print('fsend')
+            log_info('Executing eeve')
             c()
+            log_info('Executed eeve')
         for k, v in end_session_lParams.items():
             if lparam & k:
                 log_info(v)
@@ -187,7 +188,7 @@ def run():
         #print('lastError:', win32api.GetLastError())
         #print()
 
-    print('\nEntering loop')
+    #print('\nEntering loop')
     while True:
         win32gui.PumpWaitingMessages()
         time.sleep(1)

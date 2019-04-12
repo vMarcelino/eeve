@@ -34,11 +34,11 @@ class Discoverer(metaclass=travel_backpack.Singleton):
         self.time_between_pings = 0
         self.threshold = 10
 
-        self.single_connect_event = []
-        self.single_disconnect_event = []
+        self.single_connect_event = dict()
+        self.single_disconnect_event = dict()
 
-        self.multi_connect_event = []
-        self.multi_disconnect_event = []
+        self.multi_connect_event = dict()
+        self.multi_disconnect_event = dict()
 
         self.discoverer_thread = self.discoverer()
 
@@ -65,7 +65,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
             for dev in offline_devices:
                 if dev.disconnect_count > self.threshold:
                     print(dev, 'disconnected')
-                    for e in self.single_disconnect_event:
+                    for e in self.single_disconnect_event.values():
                         e(device=dev.device)
                 else:
                     dev.disconnect_count += 1
@@ -73,16 +73,16 @@ class Discoverer(metaclass=travel_backpack.Singleton):
                     new_device_set.add(dev)
 
             offline_devices = current_device_set - new_device_set
-            for e in self.multi_disconnect_event:
+            for e in self.multi_disconnect_event.values():
                 e(device_list=[d.device for d in offline_devices])
 
             new_devices = new_device_set - current_device_set
             #print('new_devices:'.ljust(18), (new_devices) or '-')
-            for e in self.multi_connect_event:
+            for e in self.multi_connect_event.values():
                 e(device_list=[d.device for d in new_devices])
             for dev in new_devices:
                 print(dev, 'connected')
-                for e in self.single_connect_event:
+                for e in self.single_connect_event.values():
                     e(device=dev.device, is_on=dev.device.is_on)
 
             #print('noch:'.ljust(18), (new_device_set & current_device_set) or '-')
@@ -91,20 +91,38 @@ class Discoverer(metaclass=travel_backpack.Singleton):
             time.sleep(self.time_between_pings)
 
 
-def register_trigger(action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=5):
-    d = Discoverer()
-    if trigger_status == 'connect':
-        if mult == 'single':
-            d.single_connect_event.append(action)
-        elif mult == 'multi':
-            d.multi_connect_event.append(action)
-    elif trigger_status == 'disconnect':
-        if mult == 'single':
-            d.single_disconnect_event.append(action)
-        elif mult == 'multi':
-            d.multi_disconnect_event.append(action)
+class RegisterTrigger:
+    def __init__(self, action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=10):
+        from uuid import uuid4
+        self.uuid = uuid4()
+        self.mult = mult
+        self.trigger_status = trigger_status
+        d = Discoverer()
+        if trigger_status == 'connect':
+            if mult == 'single':
+                d.single_connect_event[self.uuid] = action
+            elif mult == 'multi':
+                d.multi_connect_event[self.uuid] = action
+        elif trigger_status == 'disconnect':
+            if mult == 'single':
+                d.single_disconnect_event[self.uuid] = action
+            elif mult == 'multi':
+                d.multi_disconnect_event[self.uuid] = action
 
-    d.set_params(timeout=timeout, time_between_pings=time_between_pings, threshold=threshold)
+        d.set_params(timeout=timeout, time_between_pings=time_between_pings, threshold=threshold)
+
+    def unregister(self):
+        d = Discoverer()
+        if self.trigger_status == 'connect':
+            if self.mult == 'single':
+                del d.single_connect_event[self.uuid]
+            elif self.mult == 'multi':
+                del d.multi_connect_event[self.uuid]
+        elif self.trigger_status == 'disconnect':
+            if self.mult == 'single':
+                del d.single_disconnect_event[self.uuid]
+            elif self.mult == 'multi':
+                del d.multi_disconnect_event[self.uuid]
 
 
 def set_device_property(device, brightness=None, temperature=None, is_on=None):
@@ -120,7 +138,7 @@ def set_device_property(device, brightness=None, temperature=None, is_on=None):
 
 
 actions = {'set TP-Link device property': {'run': set_device_property}}
-triggers = {'TP-Link device': register_trigger}
+triggers = {'TP-Link device': RegisterTrigger}
 
 if __name__ == "__main__":
 
@@ -130,6 +148,6 @@ if __name__ == "__main__":
     def b(*args, **kwargs):
         print('<==', *args, **kwargs)
 
-    register_trigger(a, 'connect')
+    RegisterTrigger(a, 'connect')
 
-    register_trigger(b, 'disconnect')
+    RegisterTrigger(b, 'disconnect')

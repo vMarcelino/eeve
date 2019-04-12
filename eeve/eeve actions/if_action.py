@@ -4,19 +4,17 @@ from eeve.action import Action
 
 class IfAction:
     def run(self, *args, logic='AND', inverse=False, **kwargs):
-        print('if statement')
+        #print('if statement')
         self.logic = logic.lower()
         if hasattr(self, 'info'):
             name = self.info.actions[self.info.current_action_index].name
         else:
             name = 'end if'
 
-        print('name:', name)
         if (name == 'if' or name == 'else') and name != 'end if':
             result = self.check_args(args, kwargs)
             if name == 'else':
                 result = False
-            print('result:', result)
             if inverse:
                 result = not result
             if not result:  # if condition resolves to false
@@ -29,11 +27,11 @@ class IfAction:
                         if_count -= 1
                     elif action.name == 'if':
                         if_count += 1
-                    print(i, action.name, if_count)
+                    print('\t', i, action.name, '- lv', if_count)
 
                     if if_count == 0:
                         self.info.current_action_index = i
-                        print('jump to:', i, action.name)
+                        print(f' ==> jump to {i}:', action.name)
                         if action.name == 'else':
                             self.info.current_action_index = i + 1
                         break
@@ -44,7 +42,7 @@ class IfAction:
                 self.info.increment_action_index = False
 
     def set_task_info(self, info: TaskInfo):
-        print('info set')
+        #print('info set')
         self.info = info
 
     def check_args(self, args, kwargs):

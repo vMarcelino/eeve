@@ -15,18 +15,20 @@ def action_wrapper(actions: List[Action], debug=False):
     task_variables = VariableGroup()
 
     def start_task(**kwargs):
+        print('task start')
         local_variables = VariableGroup()
 
         task_info = TaskInfo(actions=actions, global_variables=global_variables, task_variables=task_variables, local_variables=local_variables)
 
         local_variables.update(kwargs)
 
-        from pprint import pprint
-        pprint(task_info.__dict__)
+        #from pprint import pprint
+        #pprint(task_info.__dict__)
 
         while task_info.current_action_index < len(task_info.actions):
             task_info.increment_action_index = True
             action = task_info.actions[task_info.current_action_index]
+            print(f'executing action {task_info.current_action_index}: {action.name}')
             _run_args = deepcopy(action.run_args)
             _run_kwargs = deepcopy(action.run_kwargs)
             if debug: print('------------------------------------------------------------processing act', action)
@@ -55,8 +57,7 @@ def action_wrapper(actions: List[Action], debug=False):
             if task_info.increment_action_index:
                 task_info.current_action_index += 1
 
-            print(task_info.current_action_index)
-
+        print('task end with index', task_info.current_action_index)
         print()
 
-    return travel_backpack.except_and_print(start_task)
+    return travel_backpack.except_and_print(travel_backpack.thread_encapsulation(start_task))

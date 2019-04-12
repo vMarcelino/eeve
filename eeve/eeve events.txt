@@ -1,14 +1,13 @@
-#[test]timer: 2 -> test action: init param 1, init param 2, init_par1=True, init_par2=False, init_par3= teste teste | trigger_result=$return_result, run param 1, run param2, run_par1=True, run_par2=False, run_par3= teste teste 
-timer: 5 -> test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index
+key down -> test action: key_____1=$vars
+key down -> test action: key__2=$vars
 
-#display: off   -> set power plan: Power saver
 
-#display: on    -> start process: cmd, /C, echo oi&&pause, windowed=True
-#display: on    -> set power plan: Balanced
-#display: on    -> rest request: GET, http://192.168.10.11:2280/surveilance/stop, wait_time=1
+mouse down -> |||
+list dir:C\:/Users/Victor Marcelino/Sync/Neurobrinq/IUP6D/IncludeOnBuild/Libs/Audio/aaa, true;|||
+choose random:$file_list;  test action: mouse=$vars;|||
+play audio:$result
 
-#session end    -> rest request: GET, http://192.168.10.11:2280/surveilance/start
-
-#system suspend -> rest request: GET, http://192.168.10.11:2280/surveilance/start
-
-#[test]TP-Link device: connect  -> set TP-Link device property: device=$device, brightness=1, is_on=False
+key down-> |||
+list dir:C\:/Users/Victor Marcelino/Sync/Neurobrinq/IUP6D/IncludeOnBuild/Libs/Audio/aaa, true;|||
+choose random:$file_list;  test action: mouse=$vars;|||
+play audio:$result

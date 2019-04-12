@@ -19,6 +19,7 @@ all_events = []
 
 
 def main():
+    print()
     script_root = os.path.dirname(os.path.realpath(__file__))
     load_triggers(os.path.join(script_root, 'eeve triggers'))
     load_actions(os.path.join(script_root, 'eeve actions'))
@@ -27,7 +28,7 @@ def main():
     load_actions(os.path.join(script_root, 'eeve plugins'))
 
     with open(os.path.join(script_root, 'eeve events.txt')) as f:
-        _all_events = f.read().split('\n')
+        _all_events = f.read().replace('|||\n', '').split('\n')
     load_events(_all_events)
 
 
@@ -42,10 +43,11 @@ def unload_action(action_name):
 
 
 def load_triggers(path):
+    print('--loading triggers--')
     modules = import_from_folder(path)
     for module in modules:
         try:
-            triggers = getattr(module, 'triggers', None)
+            triggers = getattr(module, 'triggers', dict())
             for trigger_name, trigger in triggers.items():
                 print('loading', trigger_name)
                 if type(trigger) is dict:
@@ -53,25 +55,30 @@ def load_triggers(path):
                 else:
                     all_triggers[trigger_name] = {'register': trigger, 'unregister': trigger.unregister}
         except Exception as ex:
-            print('invalid action module:', ex)
-    print('--all triggers loaded--')
+            print('invalid trigger module:', ex)
+    print('--triggers loaded--')
+    print()
+    print()
 
 
 def load_actions(path):
+    print('--loading actions--')
     modules = import_from_folder(path)
     for module in modules:
         try:
-            actions = getattr(module, 'actions', None)
+            actions = getattr(module, 'actions', dict())
             for action_name, action in actions.items():
                 print('loading', action_name)
                 all_actions[action_name] = action
         except Exception as ex:
             print('invalid action module:', ex)
-    print('--all actions loaded--')
+    print('--actions loaded--')
+    print()
+    print()
 
 
 def load_events(_all_events: list):
-
+    print('--loading events--')
     for event in _all_events:
         if event and not event.startswith('#'):
             show_traceback = False
@@ -131,4 +138,6 @@ def load_events(_all_events: list):
             except Exception as ex:
                 print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
 
-    print('--all events loaded--')
+    print('--events loaded--')
+    print()
+    print()
