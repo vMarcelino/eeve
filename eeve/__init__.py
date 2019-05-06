@@ -109,7 +109,8 @@ def load_events(_all_events: list):
                             action_run = action_init_result.run
                         else:
                             if 'init' in _action:
-                                action_init_result = _action['init'](*action_init_args, **action_init_kwargs)
+                                init_act = _action['init']
+                                action_init_result = init_act(*action_init_args, **action_init_kwargs)
                             action_run = _action['run']
 
                         action_task_info_getter = _action.get('task_info', None)
