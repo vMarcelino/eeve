@@ -41,6 +41,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
         self.multi_disconnect_event = dict()
 
         self.discoverer_thread = self.discoverer()
+        print('end init')
 
     def set_params(self, timeout, time_between_pings, threshold):
         self.timeout = timeout
@@ -49,7 +50,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
 
     @travel_backpack.threadpool
     def discoverer(self):
-        current_device_set = set()
+        self.current_device_set = set()
         while True:
             #print('\nloop start')
             new_device_set = set()
@@ -60,7 +61,7 @@ class Discoverer(metaclass=travel_backpack.Singleton):
                 except:
                     pass
 
-            offline_devices = current_device_set - new_device_set
+            offline_devices = self.current_device_set - new_device_set
             #print('offline devices:'.ljust(18), (offline_devices) or '-')
             for dev in offline_devices:
                 if dev.disconnect_count > self.threshold:
@@ -72,11 +73,11 @@ class Discoverer(metaclass=travel_backpack.Singleton):
                     print(dev.alias, 'hwid:', dev.hw_id, 'id:', id(dev), 'dcnts:', dev.disconnect_count)
                     new_device_set.add(dev)
 
-            offline_devices = current_device_set - new_device_set
+            offline_devices = self.current_device_set - new_device_set
             for e in self.multi_disconnect_event.values():
                 e(device_list=[d.device for d in offline_devices])
 
-            new_devices = new_device_set - current_device_set
+            new_devices = new_device_set - self.current_device_set
             #print('new_devices:'.ljust(18), (new_devices) or '-')
             for e in self.multi_connect_event.values():
                 e(device_list=[d.device for d in new_devices])
@@ -85,8 +86,8 @@ class Discoverer(metaclass=travel_backpack.Singleton):
                 for e in self.single_connect_event.values():
                     e(device=dev.device, is_on=dev.device.is_on)
 
-            #print('noch:'.ljust(18), (new_device_set & current_device_set) or '-')
-            current_device_set = new_device_set
+            #print('noch:'.ljust(18), (new_device_set & self.current_device_set) or '-')
+            self.current_device_set = new_device_set
 
             time.sleep(self.time_between_pings)
 
@@ -110,6 +111,7 @@ class RegisterTrigger:
                 d.multi_disconnect_event[self.uuid] = action
 
         d.set_params(timeout=timeout, time_between_pings=time_between_pings, threshold=threshold)
+        print('trigger registered')
 
     def unregister(self):
         d = Discoverer()
@@ -126,18 +128,24 @@ class RegisterTrigger:
 
 
 def set_device_property(device, brightness=None, temperature=None, is_on=None):
-    if brightness is not None:
-        device.brightness = brightness
-    if temperature is not None:
-        device.color_temp = temperature
-    if is_on is not None:
-        if is_on:
-            device.turn_on()
-        else:
-            device.turn_off()
+    if type(device) is str:
+        d = Discoverer()
+        for dev in [dv.device for dv in d.current_device_set if dv.alias == device]:
+            set_device_property(dev, brightness, temperature, is_on)
+
+    else:
+        if is_on is not None:
+            if is_on:
+                device.turn_on()
+            else:
+                device.turn_off()
+        if brightness is not None:
+            device.brightness = brightness
+        if temperature is not None:
+            device.color_temp = temperature
 
 
-actions = {'set TP-Link device property': {'run': set_device_property}}
+actions = {'set TP-Link device property': {'run': set_device_property, 'init': Discover}}
 triggers = {'TP-Link device': RegisterTrigger}
 
 if __name__ == "__main__":
@@ -151,3 +159,5 @@ if __name__ == "__main__":
     RegisterTrigger(a, 'connect')
 
     RegisterTrigger(b, 'disconnect')
+    while True:
+        time.sleep(10 * 60)
