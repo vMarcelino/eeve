@@ -1,48 +1,125 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '0.2.0'
+__version__ = '1.0.0'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
 import travel_backpack
+from travel_backpack import check_and_raise
 import os
 
 import eeve.helpers as helpers
 from eeve.importer import import_from_folder
 from eeve.wrapper import action_wrapper
-from eeve.action import Action
-from eeve.event import Event
+from eeve.base_classes import Action, ActionTemplate, Trigger, TriggerTemplate, Event, Task
 import eeve.mappings as mappings
 
-all_triggers, all_actions = {}, {}
-all_events = []
+from typing import Union, Any, Dict, List, Callable
+
+trigger_templates: Dict[str, TriggerTemplate] = {}
+action_templates: Dict[str, ActionTemplate] = {}
+events: List[Event] = []
 
 
 def main():
     print()
     script_root = os.path.dirname(os.path.realpath(__file__))
-    load_triggers(os.path.join(script_root, 'eeve triggers'))
-    load_actions(os.path.join(script_root, 'eeve actions'))
+    load_triggers_from_path(os.path.join(script_root, 'eeve triggers'))
+    load_actions_from_path(os.path.join(script_root, 'eeve actions'))
 
-    load_triggers(os.path.join(script_root, 'eeve plugins'))
-    load_actions(os.path.join(script_root, 'eeve plugins'))
+    load_triggers_from_path(os.path.join(script_root, 'eeve plugins'))
+    load_actions_from_path(os.path.join(script_root, 'eeve plugins'))
 
     with open(os.path.join(script_root, 'eeve events.txt')) as f:
         _all_events = f.read().replace('|||\n', '').split('\n')
     load_events(_all_events)
 
 
-def unload_trigger(trigger_name):
-    if trigger_name in all_triggers:
-        del all_triggers[trigger_name]
+def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dict, Callable]):
+    """Adds a TriggerTemplate that can be used as base to a Trigger instance
+    
+    Arguments:
+        name {str} -- the name of the TriggerTemplate
+
+        trigger {Union[Trigger, TriggerTemplate, dict, Callable]} -- The trigger information.
+        It can be a class where init will be used as register and attribute unregister as
+        the unregister function,
+        a dict with keys `register` and `unregister` with callables as value, a Trigger or
+        another TriggerTemplate. Only the name given on the argument will be used.
+    
+    Raises:
+        AttributeError: when a class passed as "trigger" argument has no "unregister" attribute
+    """
+    if type(trigger) is Trigger:
+        tt = TriggerTemplate(name=name, register=trigger.register, unregister=trigger._unregister)
+        trigger_templates[name] = tt
+
+    elif type(trigger) is TriggerTemplate:
+
+        tt = TriggerTemplate(name=name, register=trigger.register, unregister=trigger.unregister)
+        trigger_templates[name] = tt
+
+    elif type(trigger) is dict:
+        trigger_templates[name] = TriggerTemplate(name=name, register=trigger['register'], unregister=trigger['unregister'])
+
+    else:
+        check_and_raise(hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
+        add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
 
-def unload_action(action_name):
-    if action_name in all_actions:
-        del all_actions[action_name]
+def remove_trigger_template(name: str, unregister=False):
+    """Removes a TriggerTemplate from eeve
+
+    Warning: only the template will be removed from eeve's system,
+    but any trigger created from it will still function.\n
+    In some cases the unregister function can be called to stop the instance running.
+    This is, however, up to the trigger developer to implement.
+    
+    Arguments:
+        name {str} -- Name of TriggerTemplate to remove
+    
+    Keyword Arguments:
+        unregister {bool} -- if True, will call the unregister function from trigger (default: {False})
+    """
+    if name in trigger_templates:
+        if unregister:
+            trigger_templates[name].unregister()
+
+        del trigger_templates[name]
 
 
-def load_triggers(path):
+def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args, **action_init_kwargs):
+    """Adds an ActionTemplate that can be used as base to an Action instance
+    
+    Arguments:
+        name {str} -- The name of the ActionTemplate
+
+        action_info {Union[Action, ActionTemplate, dict, Callable]} -- The action information.
+        It can be a class where init will be used as initialization and attribute "run" as
+        the action function,
+        a dict where key `run` has value of the action function, an optional `init` key with the initialization function as value, 
+        an Action or another ActionTemplate. Only the name given on the argument will be used.
+    """
+    if type(action_info) in [Action, ActionTemplate]:
+        at = ActionTemplate.copy_from(action_info)
+        at.reinitialize_with_args(*action_init_args, **action_init_kwargs)
+        action_templates[name] = at
+
+    else:
+        action_templates[name] = ActionTemplate.make(name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
+
+
+def remove_action_template(name: str):
+    """Removes an ActionTemplate from eeve
+    
+    Arguments:
+        name {str} -- Name o ActionTemplate to remove
+    """
+    if name in action_templates:
+        del action_templates[name]
+
+
+def load_triggers_from_path(path):
     print('--loading triggers--')
     modules = import_from_folder(path)
     for module in modules:
@@ -50,10 +127,7 @@ def load_triggers(path):
             triggers = getattr(module, 'triggers', dict())
             for trigger_name, trigger in triggers.items():
                 print('loading', trigger_name)
-                if type(trigger) is dict:
-                    all_triggers[trigger_name] = trigger
-                else:
-                    all_triggers[trigger_name] = {'register': trigger, 'unregister': trigger.unregister}
+                add_trigger_template(name=trigger_name, trigger=trigger)
         except Exception as ex:
             print('invalid trigger module:', ex)
     print('--triggers loaded--')
@@ -61,7 +135,7 @@ def load_triggers(path):
     print()
 
 
-def load_actions(path):
+def load_actions_from_path(path):
     print('--loading actions--')
     modules = import_from_folder(path)
     for module in modules:
@@ -69,7 +143,7 @@ def load_actions(path):
             actions = getattr(module, 'actions', dict())
             for action_name, action in actions.items():
                 print('loading', action_name)
-                all_actions[action_name] = action
+                add_action_template(name=action_name, action_info=action)
         except Exception as ex:
             print('invalid action module:', ex)
     print('--actions loaded--')
@@ -98,45 +172,18 @@ def load_events(_all_events: list):
                     action_name, action_init_args, action_init_kwargs, action_run_args, action_run_kwargs = helpers.process_args(
                         action, return_init_args=True)
 
-                    _action = all_actions[action_name]
-                    action_init_result = None
-                    action_run = None
-                    action_task_info_getter = None
+                    _action_template = ActionTemplate.copy_from(action_templates[action_name])
+                    _action_template.reinitialize_with_args(*action_init_args, **action_init_kwargs)
+                    _action = Action(*action_run_args, action_info=_action_template, **action_run_kwargs)
+                    actions.append(_action)
 
-                    if type(_action) is dict:
-                        if 'class' in _action:
-                            action_init_result = _action['class'](*action_init_args, **action_init_kwargs)
-                            action_run = action_init_result.run
-                        else:
-                            if 'init' in _action:
-                                init_act = _action['init']
-                                action_init_result = init_act(*action_init_args, **action_init_kwargs)
-                            action_run = _action['run']
-
-                        action_task_info_getter = _action.get('task_info', None)
-
-                    else:
-                        action_init_result = _action(*action_init_args, **action_init_kwargs)
-                        action_run = action_init_result.run
-
-                    #print(action_run)
-                    action_run = travel_backpack.except_and_print(action_run)
-                    act = Action(
-                        func=action_run,
-                        run_args=action_run_args,
-                        run_kwargs=action_run_kwargs,
-                        init_result=action_init_result,
-                        task_info_getter=action_task_info_getter,
-                        name=action_name)
-                    actions.append(act)
-                    #action_run = action_wrapper(action_run, action_run_args, action_run_kwargs, debug=show_traceback)
-
-                task = action_wrapper(actions, debug=show_traceback)
-                event = Event(all_triggers[trigger]['unregister'])
-                event.trigger_output_result = all_triggers[trigger]['register'](task, *trigger_args, **trigger_kwargs)
-                all_events.append(event)
+                task = Task(actions, debug=show_traceback)
+                trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                event = Event(triggers=[trigger], task=task)  # starts the trigger
+                events.append(event)
 
             except Exception as ex:
+                show_traceback = True
                 print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
 
     print('--events loaded--')

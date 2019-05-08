@@ -1,13 +1,70 @@
-key down -> test action: key_____1=$vars
-key down -> test action: key__2=$vars
+#[test]timer: 2 -> test action: init param 1, init param 2, init_par1=True, init_par2=False, init_par3= teste teste | trigger_result=$return_result, run param 1, run param2, run_par1=True, run_par2=False, run_par3= teste teste 
+#[test]timer: 5, start=true -> test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index;  test action: trigger_result=$return_result, index=$index
+#timer: 5, start=true -> test action: locals=$vars, protected=$$vars, public=$$$vars, index=$index; test action: locals=$vars, protected=$$vars, public=$$$vars, index=$index; test action: locals=$vars, protected=$$vars, public=$$$vars, index=$index; test action: locals=$vars, protected=$$vars, public=$$$vars, index=$index; test action: locals=$vars, protected=$$vars, public=$$$vars, index=$index
 
 
-mouse down -> |||
-list dir:C\:/Users/Victor Marcelino/Sync/Neurobrinq/IUP6D/IncludeOnBuild/Libs/Audio/aaa, true;|||
-choose random:$file_list;  test action: mouse=$vars;|||
-play audio:$result
+#----------------------------------------------------------------------------------
+display: off ->                                                                  |||
+    set power plan: Power saver;                                                 |||
+    rest request: GET, http\://192.168.10.112/?function\=led1_off, retry_count=3;|||
+    rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.000000, retry_count=5  |||
 
-key down-> |||
-list dir:C\:/Users/Victor Marcelino/Sync/Neurobrinq/IUP6D/IncludeOnBuild/Libs/Audio/aaa, true;|||
-choose random:$file_list;  test action: mouse=$vars;|||
-play audio:$result
+#----------------------------------------------------------------------------------
+
+
+keys down: RcontrolkeyRshiftkeyEnter, True -> toggle keychain mode: any
+keychain: Numpad0, True, any -> rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.000000, retry_count=5;rest request: GET, http\://192.168.10.11\:85/TV\;0, retry_count=5; set TP-Link device property: device=Bedroom Light, is_on=False
+keychain: FAN, True, any -> rest request: GET, http\://192.168.10.11\:85/TV, retry_count=5
+keychain: VENT, True, any -> rest request: GET, http\://192.168.10.11\:85/TV, retry_count=5
+keychain: LED, True, any -> rest request: GET, http\://192.168.10.11\:85/Perimetral_Led, retry_count=5
+keychain: Up, True, any -> rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.FA7100, retry_count=5
+keychain: Down, True, any -> rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.000000, retry_count=5
+keychain: DAY, True, any -> set TP-Link device property: device=Bedroom Light, is_on=True, brightness=100, temperature=6500
+keychain: MOVIE, True, any -> set TP-Link device property: device=Bedroom Light, is_on=True, brightness=0, temperature=2700
+
+
+# display: on -> start process: cmd, /C, echo oi&&pause, windowed=True
+#----------------------------------------------------------------------------------------------------
+display: on ->                                                                                    |||
+    set power plan: Balanced;                                                                     |||
+    rest request: GET, http\://192.168.10.112/?function\=led1_on, wait_time=0.5, retry_count=15;  |||
+    rest request: GET, http\://192.168.10.11\:2280/surveillance/stop, wait_time=1;                |||
+    rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.FA7100, retry_count=5              |||
+
+#----------------------------------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------------------------------------------------
+session end ->                                                                                      |||
+    rest request: GET, http\://192.168.10.11\:2280/surveillance/start, retry_count=3, wait_time=1;  |||
+    rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.000000, retry_count=5  
+
+#--------------------------------------------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------------------------------------------------
+system suspend ->                                                                                  |||
+    rest request: GET, http\://192.168.10.11\:2280/surveillance/start, retry_count=3, wait_time=1; |||
+    rest request: GET, http\://192.168.10.11\:85/Perimetral_Led.000000, retry_count=5  
+
+#--------------------------------------------------------------------------------------------------------------
+
+
+
+#--------------------------------------------------------------------
+
+TP-Link device: connect  ->                                        |||
+    wait: 0.2;                                                     |||
+    if:$is_on;                                                     |||
+        set TP-Link device property: device=$device, is_on=False;  |||
+        wait: 0.5;                                                 |||
+        set TP-Link device property: device=$device, is_on=True;   |||
+    else;                                                          |||
+        set TP-Link device property: device=$device, is_on=True;   |||
+        wait: 0.5;                                                 |||
+        set TP-Link device property: device=$device, is_on=False;  |||
+    end if                                                         |||
+
+#--------------------------------------------------------------------

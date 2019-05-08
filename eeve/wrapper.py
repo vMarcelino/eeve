@@ -1,6 +1,5 @@
 from functools import wraps
 from copy import deepcopy
-from eeve.action import Action
 from eeve.variable import VariableGroup
 from eeve.taskinfo import TaskInfo
 from typing import List
@@ -11,7 +10,7 @@ global_variables = VariableGroup()
 global_variables['stdout'] = sys.stdout
 
 
-def action_wrapper(actions: List[Action], debug=False):
+def action_wrapper(actions: 'List[Action]', debug=False):
     task_variables = VariableGroup()
 
     def start_task(**kwargs):
@@ -49,7 +48,7 @@ def action_wrapper(actions: List[Action], debug=False):
             action.update_task_info(task_info)
             if debug:
                 print('call:', action.name, _run_args, _run_kwargs)
-            run_result = action.func(*_run_args, **_run_kwargs)
+            run_result = action.run(*_run_args, **_run_kwargs)
 
             if type(run_result) is dict:
                 local_variables.update(run_result)

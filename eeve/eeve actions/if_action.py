@@ -1,5 +1,4 @@
 from eeve.taskinfo import TaskInfo
-from eeve.action import Action
 
 
 class IfAction:

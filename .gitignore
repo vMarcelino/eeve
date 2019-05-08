@@ -40,3 +40,4 @@ nosetests.xml
 settings.json
 
 *.log
+.vscode
