@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eeve"
-version = "1.0.0"
+version = "1.1.0"
 description = "A flexible, powerfull and simple event trigger"
 authors = ["Victor Marcelino <victor.fmarcelino@gmail.com>"]
 license = "Apache-2.0"
@@ -9,7 +9,7 @@ homepage = "https://github.com/vMarcelino/eeve"
 
 [tool.poetry.dependencies]
 python = ">=3.6"
-travel-backpack = ">=0.11.0"
+travel-backpack = ">=0.12.0"
 
 [tool.poetry.dev-dependencies]
 

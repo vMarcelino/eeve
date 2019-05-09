@@ -130,8 +130,8 @@ class Task:  # I just wanted it to be organized as all the other classes
     """
     start: Callable
 
-    def __init__(self, actions: List[Action], debug: bool = False):
-        self.start = action_wrapper(actions=actions, debug=debug)
+    def __init__(self, actions: List[Action], debug: bool = False, verbose=1):
+        self.start = action_wrapper(actions=actions, debug=debug, verbose=verbose)
 
 
 @dataclass

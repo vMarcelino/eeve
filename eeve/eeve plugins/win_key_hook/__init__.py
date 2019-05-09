@@ -195,7 +195,8 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
     def __init__(self):
         print('initializing Key Hook Wrapper')
         self.keyboard_callbacks = dict()
-        self.mouse_callbacks = dict()
+        self.mouse_down_callbacks = dict()
+        self.mouse_move_callbacks = dict()
         self.keychains = dict()
         self.allowed_tags = set()
         self.keys_down = set()
@@ -219,12 +220,16 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
             nCode  # just to stop error on line above and keep the name
 
             if event.event_type == 'LMB down':
-                for cb in self.mouse_callbacks.values():
+                for cb in self.mouse_down_callbacks.values():
                     cb(key_name=event.event_type,
                        point=event.point,
                        wheel_direction=event.wheel_direction,
                        injection=event.injection,
                        time=event.time)
+            elif event.event_type == 'mouse move':
+                for cb in self.mouse_move_callbacks.values():
+                    cb(key_name=event.event_type, point=event.point, injection=event.injection, time=event.time)
+
             return True
 
         parser = InputParser(key_down_callback=keyboard_callback, key_up_callback=None, keys_down=self.keys_down)
@@ -241,13 +246,21 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
     def remove_keyboard_callback(self, uuid):
         del self.keyboard_callbacks[uuid]
 
-    def add_mouse_callback(self, callback):
+    def add_mouse_down_callback(self, callback):
         uuid = uuid4()
-        self.mouse_callbacks[uuid] = callback
+        self.mouse_down_callbacks[uuid] = callback
         return uuid
 
-    def remove_mouse_callback(self, uuid):
-        del self.mouse_callbacks[uuid]
+    def remove_mouse_down_callback(self, uuid):
+        del self.mouse_down_callbacks[uuid]
+
+    def add_mouse_move_callback(self, callback):
+        uuid = uuid4()
+        self.mouse_move_callbacks[uuid] = callback
+        return uuid
+
+    def remove_mouse_move_callback(self, uuid):
+        del self.mouse_move_callbacks[uuid]
 
     def add_keychain_callback(self, callback, keychain: str, swallow_key: bool, only_on_blocking_mode: bool):
         uuid = uuid4()
@@ -276,10 +289,18 @@ class RegisterKeyDown:
 
 class RegisterMouseDown:
     def __init__(self, action):
-        self.uuid = KeyHookWrapper().add_mouse_callback(action)
+        self.uuid = KeyHookWrapper().add_mouse_down_callback(action)
 
     def unregister(self):
-        KeyHookWrapper().remove_mouse_callback(self.uuid)
+        KeyHookWrapper().remove_mouse_down_callback(self.uuid)
+
+
+class RegisterMouseMove:
+    def __init__(self, action):
+        self.uuid = KeyHookWrapper().add_mouse_move_callback(action)
+
+    def unregister(self):
+        KeyHookWrapper().remove_mouse_move_callback(self.uuid)
 
 
 class RegisterKeychain:
@@ -312,7 +333,13 @@ class SetKeyBlockingMode:
         print('key blocking mode is', kw.allowed_tags)
 
 
-triggers = {'key down': RegisterKeyDown, 'mouse down': RegisterMouseDown, 'keychain': RegisterKeychain, 'keys down': RegisterKeyCombination}
+triggers = {
+    'key down': RegisterKeyDown,
+    'mouse down': RegisterMouseDown,
+    'mouse move': RegisterMouseMove,
+    'keychain': RegisterKeychain,
+    'keys down': RegisterKeyCombination
+}
 actions = {'toggle keychain mode': SetKeyBlockingMode}
 
 

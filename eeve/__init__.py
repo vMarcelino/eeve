@@ -1,6 +1,6 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
@@ -156,10 +156,15 @@ def load_events(_all_events: list):
     for event in _all_events:
         if event and not event.startswith('#'):
             show_traceback = False
+            verbose = 1
             print(f'loading [{event}]')
-            if event.startswith('[test]'):
-                show_traceback = True
-                event = event[len('[test]'):]
+            while event.startswith('['):
+                if event.startswith('[test]'):
+                    show_traceback = True
+                    event = event[len('[test]'):]
+                elif event.startswith('[no verbose]'):
+                    verbose = 0
+                    event = event[len('[no verbose]'):]
             try:
                 event = mappings.remap(event)
                 trigger, raw_actions = helpers.strip_split(event, mappings.char_map['->'], maxsplit=1)
@@ -173,13 +178,16 @@ def load_events(_all_events: list):
                         action, return_init_args=True)
 
                     _action_template = ActionTemplate.copy_from(action_templates[action_name])
-                    _action_template.reinitialize_with_args(*action_init_args, **action_init_kwargs)
+                    if _action_template.init_func:
+                        _action_template.reinitialize_with_args(*action_init_args, **action_init_kwargs)
                     _action = Action(*action_run_args, action_info=_action_template, **action_run_kwargs)
                     actions.append(_action)
 
-                task = Task(actions, debug=show_traceback)
+                task = Task(actions, debug=show_traceback, verbose=verbose)
                 trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                print('Starting trigger')
                 event = Event(triggers=[trigger], task=task)  # starts the trigger
+                print('Trigger started')
                 events.append(event)
 
             except Exception as ex:

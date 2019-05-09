@@ -1,4 +1,4 @@
-from eeve.variable import VariableGroup
+from eeve.variable import VariableGroup, Variable
 from dataclasses import dataclass
 from typing import List
 
@@ -46,7 +46,7 @@ class TaskInfo:
             if var_name == 'vars':
                 return scope.vars
             else:
-                return scope.get_var(var_name)
+                return scope.get_or_create(var_name)
         else:
             if var_name == 'vars':
                 return scope.to_kwargs()
