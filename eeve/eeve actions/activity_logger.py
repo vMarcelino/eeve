@@ -29,7 +29,7 @@ class Timer(metaclass=Singleton):
                 self.active = False
                 print('System deactivated')
                 with open(self.log_path, 'a') as f:
-                    f.writelines([f'[{time_now_to_string()}] System Idle'])
+                    f.write(f'[{time_now_to_string()}] System Idle\n')
 
             if self.active:
                 self.update_window()
@@ -42,7 +42,7 @@ class Timer(metaclass=Singleton):
             print('System activated')
             with open(self.log_path, 'a') as f:
                 time = round_up_time_delta(datetime.now() - self.last_move)
-                f.writelines([f'\n\n\n[{time_now_to_string()}] System resume from {time} idle time'])
+                f.write(f'\n\n\n[{time_now_to_string()}] System resume from {time} idle time\n')
 
         self.last_move = datetime.now()
         if print_proc_name:
@@ -54,10 +54,8 @@ class Timer(metaclass=Singleton):
         if active_window != self.last_active_window:
             with open(self.log_path, 'a') as f:
                 time = round_up_time_delta(datetime.now() - self.last_active_window_time)
-                f.writelines([
-                    f'[{time_now_to_string()}] spent {time} on {self.last_active_window}\n',
-                    f'[{time_now_to_string()}] ---------------> {active_window}'
-                ])
+                f.write(f'[{time_now_to_string()}] spent {time} on {self.last_active_window}\n' +
+                        f'[{time_now_to_string()}] ---------------> {active_window}\n')
 
             self.last_active_window = active_window
             self.last_active_window_time = self.last_move
