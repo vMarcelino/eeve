@@ -94,7 +94,7 @@ class Timer(metaclass=Singleton):
         if os.path.isfile('clear.txt'):
             self.make_summary(True, n)
             os.remove('clear.txt')
-        if self.time_count_helper_summary_hourly - n > timedelta(hours=1):
+        if n - self.time_count_helper_summary_hourly > timedelta(hours=1):
             self.time_count_helper_summary_hourly = n
             self.make_summary(False, n, '.summary.hourly')
 
