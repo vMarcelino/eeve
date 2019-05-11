@@ -1,11 +1,26 @@
 from datetime import datetime, timedelta
 import math
 from time import sleep
-from travel_backpack import Singleton, thread_encapsulation, time_now_to_string
+from travel_backpack import Singleton, thread_encapsulation, time_now_to_string, except_and_print
 import win32gui, win32process, psutil
+import os
+from dataclasses import dataclass
 
 timer_runing = False
 timer_initialized = False
+
+
+@dataclass
+class Window:
+    name: str
+    time: timedelta
+
+
+@dataclass
+class Process:
+    name: str
+    time: timedelta
+    windows: 'Dict[Window]'
 
 
 class Timer(metaclass=Singleton):
@@ -13,27 +28,35 @@ class Timer(metaclass=Singleton):
         global timer_initialized
         print('starting timer')
         self.last_move = datetime.now()
+        self.day = datetime.now().day
         self.active = False
         self.t = t
         self.log_path = p
         self.countdown()
         timer_initialized = True
-        self.last_active_window = ''
-        self.last_active_window_time = self.last_move
+        self.indef_name = '[none]'
+        self.last_window_name = self.indef_name
+        self.last_process_name = self.indef_name
+        self.time_count_helper_process = self.last_move
+        self.time_count_helper_window = self.last_move
+        self.proc_log = {self.indef_name: Process(name=self.indef_name, time=timedelta(), windows=dict())}
 
     @thread_encapsulation
     def countdown(self):
-        while True:
-            #print(self.active, self.t - (datetime.now() - self.last_move).total_seconds())
+        @except_and_print
+        def do_update():
+            print('active:', self.active, "-- time 'til inactivity:",
+                  self.t - (datetime.now() - self.last_move).total_seconds())
             if self.active and (datetime.now() - self.last_move).total_seconds() >= self.t:
                 self.active = False
                 print('System deactivated')
                 with open(self.log_path, 'a') as f:
                     f.write(f'[{time_now_to_string()}] System Idle\n')
 
-            if self.active:
-                self.update_window()
+            self.update_window()
 
+        while True:
+            do_update()
             sleep(1)
 
     def update(self, print_proc_name=False):
@@ -50,20 +73,72 @@ class Timer(metaclass=Singleton):
             self.update_window()
 
     def update_window(self):
-        active_window = self.get_active_window()
-        if active_window != self.last_active_window:
+        try:
+            if self.active:
+                active_process, active_window = self.get_active_window()
+            else:
+                active_process, active_window = '[inactivity]', self.last_window_name
+        except psutil.NoSuchProcess:
+            print('Failed to grab process')
+            return
+
+        n = datetime.now()
+        d = n.day
+        if self.day != d:
+            self.make_summary(True, n)
+            self.day = d
+        if os.path.isfile('dump.txt'):
+            self.make_summary(False, n)
+            os.remove('dump.txt')
+        if os.path.isfile('clear.txt'):
+            self.make_summary(True, n)
+            os.remove('clear.txt')
+
+        # initializes active process if it does not exists
+        if active_process not in self.proc_log:
+            self.proc_log[active_process] = Process(
+                name=active_process, time=timedelta(), windows=dict())  # (time spent in seconds, window names)
+
+        last_proc_info = self.proc_log[self.last_process_name].windows  # shortcut for last process's info
+
+        if self.last_window_name not in last_proc_info:
+            last_proc_info[self.last_window_name] = Window(name=self.last_window_name, time=timedelta())
+
+        if active_window != self.last_window_name or active_process != self.last_process_name:
+            last_proc_info[self.last_window_name].time += n - self.time_count_helper_window
+
             with open(self.log_path, 'a') as f:
-                time = round_up_time_delta(datetime.now() - self.last_active_window_time)
-                f.write(f'[{time_now_to_string()}] spent {time} on {self.last_active_window}\n' +
+                time = round_up_time_delta(n - self.time_count_helper_window)
+                total_time = round_up_time_delta(last_proc_info[self.last_window_name].time)
+                f.write(f'[{time_now_to_string()}] spent {time} on {self.last_window_name}.  {total_time} total\n' +
                         f'[{time_now_to_string()}] ---------------> {active_window}\n')
 
-            self.last_active_window = active_window
-            self.last_active_window_time = self.last_move
+            self.last_window_name = active_window
+            self.time_count_helper_window = n
+
+        # if it changed, add time to the last one and prepare for the current
+        if active_process != self.last_process_name:
+            self.proc_log[self.last_process_name].time += n - self.time_count_helper_process
+            self.last_process_name = active_process
+            self.time_count_helper_process = n
 
     def get_active_window(self):
         fgw = win32gui.GetForegroundWindow()
         pid = win32process.GetWindowThreadProcessId(fgw)  #This produces a list of PIDs active window relates to
-        return f'{psutil.Process(pid[-1]).name()}: {win32gui.GetWindowText(fgw)}'
+        name = psutil.Process(pid[-1]).name()
+        return name, f'{name}: {win32gui.GetWindowText(fgw)}'
+
+    def make_summary(self, delete, n):
+        summ_name = '.summary'.join(os.path.splitext(self.log_path))
+        with open(summ_name, 'a') as f:
+            f.write(f'\n\n----------{n}---------\n')
+            for proc_name, proc in self.proc_log.items():
+                print(f'dumping to file:', proc)
+                f.write(f'\n{proc_name}: {round_up_time_delta(proc.time)} total time\n')
+                for window_name, wind in proc.windows.items():
+                    f.write(f'\t{window_name}: {round_up_time_delta(wind.time)} total time\n')
+            if delete:
+                self.proc_log = {self.indef_name: Process(name=self.indef_name, time=timedelta(), windows=dict())}
 
 
 def round_up_time_delta(td: timedelta) -> timedelta:
@@ -86,7 +161,7 @@ def initialize_logger(time, log_path):
     global timer_runing
     if not timer_runing:
         timer_runing = True
-        t = Timer(t=time * 60, p=log_path)
+        Timer(t=time * 60, p=log_path)
 
 
 actions = {
