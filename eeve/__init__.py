@@ -1,6 +1,6 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '1.3.0'
+__version__ = '1.4.0'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
@@ -41,7 +41,7 @@ def main():
 
         load_events(_all_events)
     else:
-        print('no conf file')
+        print('no conf file at', conf_file)
 
 
 def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dict, Callable]):
