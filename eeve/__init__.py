@@ -1,6 +1,6 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '1.1.0'
+__version__ = '1.3.0'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
@@ -23,6 +23,9 @@ events: List[Event] = []
 
 def main():
     print()
+
+    from pathlib import Path
+
     script_root = os.path.dirname(os.path.realpath(__file__))
     load_triggers_from_path(os.path.join(script_root, 'eeve triggers'))
     load_actions_from_path(os.path.join(script_root, 'eeve actions'))
@@ -30,9 +33,15 @@ def main():
     load_triggers_from_path(os.path.join(script_root, 'eeve plugins'))
     load_actions_from_path(os.path.join(script_root, 'eeve plugins'))
 
-    with open(os.path.join(script_root, 'eeve events.txt')) as f:
-        _all_events = f.read().replace('|||\n', '').split('\n')
-    load_events(_all_events)
+    conf_root = os.path.join(Path.home(), 'Documents', 'eeve')
+    conf_file = os.path.join(conf_root, 'eeve events.txt')
+    if os.path.isfile(conf_file):
+        with open(conf_file) as f:
+            _all_events = f.read().replace('|||\n', '').split('\n')
+
+        load_events(_all_events)
+    else:
+        print('no conf file')
 
 
 def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dict, Callable]):
@@ -60,10 +69,12 @@ def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dic
         trigger_templates[name] = tt
 
     elif type(trigger) is dict:
-        trigger_templates[name] = TriggerTemplate(name=name, register=trigger['register'], unregister=trigger['unregister'])
+        trigger_templates[name] = TriggerTemplate(
+            name=name, register=trigger['register'], unregister=trigger['unregister'])
 
     else:
-        check_and_raise(hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
+        check_and_raise(
+            hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
         add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
 
@@ -88,7 +99,8 @@ def remove_trigger_template(name: str, unregister=False):
         del trigger_templates[name]
 
 
-def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args, **action_init_kwargs):
+def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args,
+                        **action_init_kwargs):
     """Adds an ActionTemplate that can be used as base to an Action instance
     
     Arguments:
@@ -106,7 +118,8 @@ def add_action_template(name: str, action_info: Union[Action, ActionTemplate, di
         action_templates[name] = at
 
     else:
-        action_templates[name] = ActionTemplate.make(name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
+        action_templates[name] = ActionTemplate.make(
+            name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
 
 
 def remove_action_template(name: str):
@@ -184,7 +197,8 @@ def load_events(_all_events: list):
                     actions.append(_action)
 
                 task = Task(actions, debug=show_traceback, verbose=verbose)
-                trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                trigger = Trigger.make(
+                    *trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
                 print('Starting trigger')
                 event = Event(triggers=[trigger], task=task)  # starts the trigger
                 print('Trigger started')

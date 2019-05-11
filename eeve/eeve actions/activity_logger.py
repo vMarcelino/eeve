@@ -39,6 +39,7 @@ class Timer(metaclass=Singleton):
         self.last_process_name = self.indef_name
         self.time_count_helper_process = self.last_move
         self.time_count_helper_window = self.last_move
+        self.time_count_helper_summary_hourly = self.last_move
         self.proc_log = {self.indef_name: Process(name=self.indef_name, time=timedelta(), windows=dict())}
 
     @thread_encapsulation
@@ -93,6 +94,9 @@ class Timer(metaclass=Singleton):
         if os.path.isfile('clear.txt'):
             self.make_summary(True, n)
             os.remove('clear.txt')
+        if self.time_count_helper_summary_hourly - n > timedelta(hours=1):
+            self.time_count_helper_summary_hourly = n
+            self.make_summary(False, n, '.summary.hourly')
 
         # initializes active process if it does not exists
         if active_process not in self.proc_log:
@@ -128,15 +132,16 @@ class Timer(metaclass=Singleton):
         name = psutil.Process(pid[-1]).name()
         return name, f'{name}: {win32gui.GetWindowText(fgw)}'
 
-    def make_summary(self, delete, n):
-        summ_name = '.summary'.join(os.path.splitext(self.log_path))
+    def make_summary(self, delete: bool, n: datetime, postfix='.summary'):
+        summ_name = postfix.join(os.path.splitext(self.log_path))
         with open(summ_name, 'a') as f:
             f.write(f'\n\n----------{n}---------\n')
-            for proc_name, proc in self.proc_log.items():
+            for proc_name, proc in sorted(self.proc_log.items(), key=lambda x: x[1].time, reverse=True):
                 print(f'dumping to file:', proc)
                 f.write(f'\n{proc_name}: {round_up_time_delta(proc.time)} total time\n')
-                for window_name, wind in proc.windows.items():
-                    f.write(f'\t{window_name}: {round_up_time_delta(wind.time)} total time\n')
+                for window_name, wind in sorted(proc.windows.items(), key=lambda x: x[1].time, reverse=True):
+                    percent = int(100 * wind.time / proc.time) if proc.time != timedelta(0) else '-'
+                    f.write(f'\t{window_name}: {round_up_time_delta(wind.time)} total time ({percent}%)\n')
             if delete:
                 self.proc_log = {self.indef_name: Process(name=self.indef_name, time=timedelta(), windows=dict())}
 
