@@ -8,4 +8,4 @@ python:
   - "3.8-dev"  # 3.8 development branch
   - "nightly"  # nightly build
 
-script: pytest
+script: pytest --ignore "./eeve/eeve actions/test_action.py"
