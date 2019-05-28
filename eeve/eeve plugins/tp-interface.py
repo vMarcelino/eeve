@@ -129,8 +129,10 @@ class RegisterTrigger:
 
 def set_device_property(device, brightness=None, temperature=None, is_on=None):
     if type(device) is str:
+        print('Getting discoverer')
         d = Discoverer()
-        for dev in [dv.device for dv in d.current_device_set if dv.alias == device]:
+        for dev_wrapper, dev in [(dv, dv.device) for dv in d.current_device_set if dv.alias == device]:
+            print('setting property from', dev_wrapper.alias)
             set_device_property(dev, brightness, temperature, is_on)
 
     else:
