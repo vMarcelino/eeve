@@ -5,8 +5,13 @@ from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QMetaObject, Q_ARG, QVariant
 print('importing style')
-import style
+from . import style
 print('done importing style')
+
+import os
+base_path = os.path.dirname(__file__)
+
+
 
 
 class Controller(QObject):
@@ -20,6 +25,9 @@ class Controller(QObject):
     @pyqtSlot(str, str)
     def login(self, user_name: str, password: str) -> None:
         self.viewChanged.emit("Events.qml")
+        results = self.engine.rootObjects()[0].findChild(QObject, 'batata')
+        value = {"name": "batata", "colorCode": "#DDA8DD"}
+        invoke(results, 'apendous', value)
         print(user_name, password)
 
     @pyqtSlot()
@@ -40,16 +48,21 @@ class Controller(QObject):
 def invoke(obj, func_name: str, value):
     QMetaObject.invokeMethod(obj, func_name, Q_ARG(QVariant, value))
 
+
 def main():
     app = QGuiApplication(sys.argv)
 
     engine = QQmlApplicationEngine()
     controller = Controller(engine)
     engine.rootContext().setContextProperty("controller", controller)
-    engine.load("main.qml")
+
+    engine.load(os.path.join(base_path, "main.qml"))
 
     engine.quit.connect(app.quit)
     sys.exit(app.exec_())
 
+
 if __name__ == "__main__":
     main()
+
+actions = {"start gui": {'run': main}}
