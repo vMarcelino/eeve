@@ -5,16 +5,16 @@ __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
 import travel_backpack
-from travel_backpack import check_and_raise
 import os
 
-import eeve.helpers as helpers
-from eeve.importer import import_from_folder
-from eeve.wrapper import action_wrapper
-from eeve.base_classes import Action, ActionTemplate, Trigger, TriggerTemplate, Event, Task
-import eeve.mappings as mappings
+from . import helpers
+from .importer import import_from_folder
+from .wrapper import action_wrapper
+from .base_classes import Action, ActionTemplate, Trigger, TriggerTemplate, Event, Task
+from . import mappings
 
 from typing import Union, Any, Dict, List, Callable
+#from .ts import test_sampler_decorator
 
 trigger_templates: Dict[str, TriggerTemplate] = {}
 action_templates: Dict[str, ActionTemplate] = {}
@@ -69,12 +69,10 @@ def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dic
         trigger_templates[name] = tt
 
     elif type(trigger) is dict:
-        trigger_templates[name] = TriggerTemplate(
-            name=name, register=trigger['register'], unregister=trigger['unregister'])
+        trigger_templates[name] = TriggerTemplate(name=name, register=trigger['register'], unregister=trigger['unregister'])
 
     else:
-        check_and_raise(
-            hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
+        travel_backpack.check_and_raise(hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
         add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
 
@@ -99,8 +97,7 @@ def remove_trigger_template(name: str, unregister=False):
         del trigger_templates[name]
 
 
-def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args,
-                        **action_init_kwargs):
+def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args, **action_init_kwargs):
     """Adds an ActionTemplate that can be used as base to an Action instance
     
     Arguments:
@@ -118,8 +115,7 @@ def add_action_template(name: str, action_info: Union[Action, ActionTemplate, di
         action_templates[name] = at
 
     else:
-        action_templates[name] = ActionTemplate.make(
-            name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
+        action_templates[name] = ActionTemplate.make(name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
 
 
 def remove_action_template(name: str):
@@ -197,8 +193,7 @@ def load_events(_all_events: list):
                     actions.append(_action)
 
                 task = Task(actions, debug=show_traceback, verbose=verbose)
-                trigger = Trigger.make(
-                    *trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
                 print('Starting trigger')
                 event = Event(triggers=[trigger], task=task)  # starts the trigger
                 print('Trigger started')

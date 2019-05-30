@@ -41,3 +41,5 @@ settings.json
 
 *.log
 .vscode
+
+.pytest_cache
