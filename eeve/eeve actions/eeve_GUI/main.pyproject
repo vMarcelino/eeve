@@ -1,0 +1,15 @@
+{
+"files":["main.pyproject",
+"main.qml",
+"qtquickcontrols2.conf",
+"main.py",
+"style.py",
+"Login.qml",
+"EditAction.qml",
+"EditEvent.qml",
+"EditTrigger.qml",
+"Events.qml",
+"list-delete.png",
+"open-file.png",
+"PressAndHoldButton.qml"]
+}
