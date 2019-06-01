@@ -11,12 +11,13 @@ Page {
     ListView {
         id: listViewActions
         x: 433
-        width: 503
+        width: 500
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50
         anchors.top: parent.top
         anchors.topMargin: 50
         anchors.horizontalCenter: parent.horizontalCenter
+        objectName:"listview"
         delegate: Item {
             id: element
             x: 5
@@ -39,11 +40,9 @@ Page {
                         hoverEnabled: false
 
                         onClicked:{
-                            controller.clickedEvent(rectangle)
+                            controller.clickedEvent(rectangle, index, tag)
                         }
                     }
-
-            
 
                     Text {
                         //id: name
@@ -78,8 +77,8 @@ Page {
         model: ListModel {
             
             id: sampleModel
-            objectName:"batata"
-            function apendous(newElement) {
+            objectName:"listmodel"
+            function addItem(newElement) {
                 sampleModel.append(newElement)
             }
         }

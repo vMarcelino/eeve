@@ -8,132 +8,179 @@ Page {
     anchors.fill: parent
 
     title: "Editar Evento"
-    Rectangle {
-        color: "transparent"
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 35
-        anchors.top: parent.top
-        anchors.topMargin: 50
-        anchors.horizontalCenterOffset: 0
+    Row {
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 503
-        id: container
-        x: 433
+        height:parent.height
+        spacing: 10
 
-        Item {
-            id: element1
-            x: 397
-            width: 504
-            anchors.margins: 20
+        Rectangle {
+            width: 500
+            height: parent.height
+            color: "transparent"
 
             Rectangle {
-                width: element1.width
-                height: 55
-                id: rectangle2
-                x: -392
-                y: 0
+                height: 35
+                width: parent.width
                 color: "#DDA0DD"
+                id: triggerLabel
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
 
                 Text {
-                    //id: name
-                    text: "Gatilho 1"
+                    text: "Gatilhos"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenter:parent.verticalCenter
                     font.bold: true
                     font.pointSize: 13
                 }
 
                 PressAndHoldButton {
-                    anchors.right: rectangle2.right
-                    //text: "X"
+                    anchors.right: parent.right
                     source: "open-file.png"
                     anchors.verticalCenter: parent.verticalCenter
                     width: 35
                     height: 35
                 }
             }
-        }
 
-        ListView {
-            id: listViewActions
-            x: 0
-            y: 79
-            width: 504
-            height: 556
-            delegate: Item {
-                id: element
-                x: 5
-                width: listViewActions.width
-                height: 55
-                clip: true
-                Row {
-                    id: row1
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 10
-                    //width: listView.width
-                    Rectangle {
-                        width: listViewActions.width
-                        height: 40
-                        id: rectangle
-                        color: colorCode
+            ListView {
+                width: parent.width
+                spacing: 2
+                id: triggerList
+                anchors.top: triggerLabel.bottom
+                anchors.bottom: triggerButton.top
+                anchors.horizontalCenter: parent.horizontalCenter
 
-                        Text {
-                            //id: name
-                            text: name
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.bold: true
+
+                delegate: Rectangle {
+                    id:element
+                    width: parent.width
+                    clip: true
+                    height: 40
+                    color: colorCode
+
+                    MouseArea{
+                        anchors.fill:parent
+                        z: 1
+                        hoverEnabled: false
+
+                        onClicked:{
+                            controller.clickedTrigger(element, index, tag)
                         }
+                    }
 
-                        Row {
-                            id: row
-                            anchors.right: rectangle.right
-                            anchors.verticalCenter: parent.verticalCenter
+                    Text {
+                        text: name
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.bold: true
+                    }
 
-                            Switch {
-                                //source: "content/pics/plus-sign.png"
-                                //onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
-                            }
-
-                            PressAndHoldButton {
-                                //text: "X"
-                                source: "list-delete.png"
-                                anchors.verticalCenter: parent.verticalCenter
-                                //width: 40
-                                //height: 40
-                            }
-                        }
+                    PressAndHoldButton {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "list-delete.png"
+                    
+                    }
+                }
+                model: ListModel {
+                    id:triggerListModel
+                    objectName:"listmodeltriggers"
+                    function addItem(newElement) {
+                        triggerListModel.append(newElement)
                     }
                 }
             }
-            model: ListModel {
-                ListElement {
-                    name: "Ação 1"
-                    colorCode: "#DDA0DD"
-                }
-
-                ListElement {
-                    name: "Ação 2"
-                    colorCode: "#DDA0DD"
-                }
-
-                ListElement {
-                    name: "Ação 3"
-                    colorCode: "#DDA0DD"
+            RoundButton {
+                width: 75
+                height: 75
+                text: "+"
+                id: triggerButton
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                onClicked: {
+                    controller.addTrigger()
                 }
             }
         }
-    }
-    RoundButton {
-        id: roundButton
-        x: 1131
-        y: 587
-        width: 75
-        height: 75
-        text: "+"
-        anchors.right: parent.right
-        anchors.rightMargin: 73
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 58
+        Rectangle {
+            width: 500
+            height: parent.height
+            color: "transparent"
+
+            Rectangle {
+                color: "#DDA0DD"
+                height: 35
+                width: parent.width
+                id: actionLabel
+                anchors.top: triggerButton.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                Text {
+                    text: "Ações"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter:parent.verticalCenter
+                    font.bold: true
+                    font.pointSize: 13
+                }
+
+                PressAndHoldButton {
+                    anchors.right: parent.right
+                    source: "open-file.png"
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 35
+                    height: 35
+                }
+            }
+
+            ListView {
+                spacing: 2
+                width: parent.width
+                id: actionList
+                anchors.top: actionLabel.bottom
+                anchors.bottom: actionButton.top
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                delegate: Rectangle {
+                    id:element
+                    width: parent.width
+                    clip: true
+                    height: 40
+                    color: colorCode
+
+                    Text {
+                        text: name
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.bold: true
+                    }
+
+                    PressAndHoldButton {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "list-delete.png"
+                    
+                    }
+                }
+                model: ListModel {
+                    id:actionListModel
+                    objectName:"listmodelactions"
+                    function addItem(newElement) {
+                        actionListModel.append(newElement)
+                    }
+                }
+            }
+            RoundButton {
+                width: 75
+                height: 75
+                text: "+"
+                id: actionButton
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                onClicked: {
+                    controller.addAction()
+                }
+            }
+        }
     }
 }
