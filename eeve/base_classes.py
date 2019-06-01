@@ -129,8 +129,10 @@ class Task:  # I just wanted it to be organized as all the other classes
         \tthe process ends.
     """
     start: Callable
+    actions: List[Action]
 
     def __init__(self, actions: List[Action], debug: bool = False, verbose=1):
+        self.actions = actions
         self.start = action_wrapper(actions=actions, debug=debug, verbose=verbose)
 
 
@@ -172,8 +174,17 @@ class Event:
     all triggers can be unregistered at once for a given task.
     '''
     unregister_info: List[Tuple[Callable, Any]]
+    triggers: List[Trigger]
+    task: Task
 
-    def __init__(self, triggers: List[Trigger], task: Task):
+    def __init__(self, triggers: List[Trigger], task: Task, name=None):
+        self.triggers = triggers
+        self.task = task
+        if name is None:
+            self.name = triggers[0].name
+        else:
+            self.name = name
+
         self.unregister_info = []
         for trigger in triggers:
             self.unregister_info.append((trigger.unregister, trigger.register(task.start)))
