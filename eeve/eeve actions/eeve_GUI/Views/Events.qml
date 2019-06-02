@@ -40,7 +40,7 @@ Page {
                         hoverEnabled: false
 
                         onClicked:{
-                            controller.clickedEvent(rectangle, index, tag)
+                            eventsController.clickedEvent(rectangle, index, tag)
                         }
                     }
 
@@ -97,7 +97,7 @@ Page {
         anchors.bottomMargin: 58
 
         onClicked: {
-            controller.addEvent()
+            eventsController.addEvent()
         }
     }
 }

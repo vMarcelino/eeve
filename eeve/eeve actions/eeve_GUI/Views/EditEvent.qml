@@ -65,7 +65,7 @@ Page {
                         hoverEnabled: false
 
                         onClicked:{
-                            controller.clickedTrigger(element, index, tag)
+                            editEventController.clickedTrigger(element, index, tag)
                         }
                     }
 
@@ -89,6 +89,9 @@ Page {
                     function addItem(newElement) {
                         triggerListModel.append(newElement)
                     }
+                    function clearItems(a) {
+                        triggerListModel.clear()
+                    }
                 }
             }
             RoundButton {
@@ -99,7 +102,7 @@ Page {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
-                    controller.addTrigger()
+                    editEventController.addTrigger()
                 }
             }
         }
@@ -168,6 +171,9 @@ Page {
                     function addItem(newElement) {
                         actionListModel.append(newElement)
                     }
+                    function clearItems(a) {
+                        actionListModel.clear()
+                    }
                 }
             }
             RoundButton {
@@ -178,7 +184,7 @@ Page {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
-                    controller.addAction()
+                    editEventController.addAction()
                 }
             }
         }

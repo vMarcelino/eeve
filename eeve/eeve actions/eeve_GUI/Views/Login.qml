@@ -72,13 +72,8 @@ Page {
 
 
             onClicked:{
-                controller.login(textFieldUser.text, textFieldPassword.text)
+                loginController.login(textFieldUser.text, textFieldPassword.text)
             }
-
-            //background: Rectangle {
-            //color: "#8B008B"
-            //radius: 5
-            //}
         }
 
         Label {

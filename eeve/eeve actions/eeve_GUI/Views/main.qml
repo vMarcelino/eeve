@@ -10,7 +10,7 @@ ApplicationWindow {
     minimumHeight: 650
 
     title: qsTr("EEVE")
-
+    
     header: ToolBar {
         contentHeight: toolButton.implicitHeight
         background: Rectangle {
@@ -23,6 +23,7 @@ ApplicationWindow {
             font.pixelSize: Qt.application.font.pixelSize * 1.6
             onClicked: {
                 if (stackView.depth > 1) {
+                    controller.popView()
                     stackView.pop()
                 } else {
                     drawer.open()
@@ -36,7 +37,6 @@ ApplicationWindow {
             font.pointSize: 13
         }
     }
-
     Drawer {
         id: drawer
         width: window.width * 0.66
@@ -87,22 +87,22 @@ ApplicationWindow {
             }
         }
     }
-
     StackView {
+
         id: stackView
         initialItem: "Login.qml"
         anchors.fill: parent
-    }
 
     Connections {
         target:controller
 
-        onViewChanged:{
+        onViewPushed:{
             stackView.push(viewName)
         }
 
         onEventAdded:{
             sampleModel.append({name: "~TEst", colorCode: "#DDA8DD"})
         }
+    }
     }
 }

@@ -176,18 +176,26 @@ class Event:
     unregister_info: List[Tuple[Callable, Any]]
     triggers: List[Trigger]
     task: Task
+    enabled: bool = True
 
-    def __init__(self, triggers: List[Trigger], task: Task, name=None):
+    def __init__(self, triggers: List[Trigger], task: Task, name=None, enabled=True):
         self.triggers = triggers
         self.task = task
+        self.enabled = enabled
+
         if name is None:
             self.name = triggers[0].name
         else:
             self.name = name
 
         self.unregister_info = []
+
+        def start_task():
+            if self.enabled:
+                task.start()
+
         for trigger in triggers:
-            self.unregister_info.append((trigger.unregister, trigger.register(task.start)))
+            self.unregister_info.append((trigger.unregister, trigger.register(start_task)))
 
     def unregister(self):
         for unregister_func, trigger_output_result in self.unregister_info:
