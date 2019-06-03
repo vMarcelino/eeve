@@ -9,8 +9,30 @@ Page {
 
     title: "Editar Evento"
     Row {
+        id:topRow
         anchors.horizontalCenter: parent.horizontalCenter
-        height:parent.height
+        height: 50
+
+        Label {
+            text: "Nome:    "
+            anchors.verticalCenter:parent.verticalCenter
+        }
+
+        TextField {
+            id:eventNameTextField
+            width: 230
+            height:parent.height
+            text: "event zero"
+            selectByMouse: true
+            onEditingFinished:{
+                editEventController.nameChanged(eventNameTextField.text)
+            }
+        }
+    }
+    Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: topRow.bottom
+        anchors.bottom: parent.bottom
         spacing: 10
 
         Rectangle {
@@ -151,6 +173,16 @@ Page {
                     height: 40
                     color: colorCode
 
+                    MouseArea{
+                        anchors.fill:parent
+                        z: 1
+                        hoverEnabled: false
+
+                        onClicked:{
+                            editEventController.clickedAction(element, index, tag)
+                        }
+                    }
+
                     Text {
                         text: name
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -187,6 +219,12 @@ Page {
                     editEventController.addAction()
                 }
             }
+        }
+    }
+    Connections{
+        target:editEventController
+        onEventEditInitialized: {
+            eventNameTextField.text = eventName
         }
     }
 }

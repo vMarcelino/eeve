@@ -76,6 +76,7 @@ Page {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     text: value
+                    selectByMouse: true
                     onEditingFinished:{
                         editTriggerController.argsChanged(tag, argValue.text)
                     }

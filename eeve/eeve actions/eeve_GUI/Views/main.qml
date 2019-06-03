@@ -4,10 +4,10 @@ import QtQuick.Controls 2.5
 ApplicationWindow {
     id: window
     visible: true
-    width: 1280
-    height: 720
-    minimumWidth: 960
-    minimumHeight: 650
+    width: 900
+    height:600
+    minimumWidth: 850
+    minimumHeight: 500
 
     title: qsTr("EEVE")
     

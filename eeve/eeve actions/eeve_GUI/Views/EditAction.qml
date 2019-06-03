@@ -3,91 +3,119 @@ import QtQuick.Controls 2.5
 
 Page {
     id: page
-    //width: 1280
-    //height: 720
     anchors.fill: parent
 
     title: "Editar Ação"
-
     Rectangle {
         color: "transparent"
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 35
         anchors.top: parent.top
-        anchors.topMargin: 50
-        anchors.horizontalCenterOffset: 0
+        anchors.topMargin: 10
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 503
-        id: container
-        x: 433
+        width: 500
 
-        Item {
-            id: element1
-            x: 397
-            width: 504
-            anchors.margins: 20
+        Rectangle {
+            width: parent.width
+            height: 55
+            color: "#DDA0DD"
+            anchors.margins: 2
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            id:actionName
 
-            Rectangle {
-                width: element1.width
-                height: 55
-                id: rectangle2
-                x: -392
-                y: 0
-                color: "#DDA0DD"
+            ComboBox {
+                objectName: "actionsComboBox"
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                width: 300
+                model: ListModel{
+                    id:tlm
+                    objectName:"actionListModel"
+                    function addItem(newElement) {
+                        tlm.append({text : newElement})
+                    }
+                }
+                onCurrentIndexChanged:{
+                    editActionController.actionChanged(tlm.get(currentIndex).text)
+                }
+            }
 
-                Text {
-                    //id: name
-                    text: "Ação 1"
-                    font.pointSize: 13
+            PressAndHoldButton {
+                anchors.right: parent.right
+                source: "open-file.png"
+                anchors.verticalCenter: parent.verticalCenter
+                width: 35
+                height: 35
+            }
+        }
+        
+        ListView {
+            width: parent.width
+            spacing: 2
+            id: argList
+            objectName:"argList"
+            anchors.top: actionName.bottom
+            anchors.bottom: addArgButton.top
+            anchors.horizontalCenter: parent.horizontalCenter
+
+
+            delegate: Rectangle {
+                id:element
+                objectName:"somerectangle"
+                width: parent.width
+                clip: true
+                height: 40
+                color: "transparent"
+
+                TextField {
+                    id:argValue
+                    objectName:"argValue"
+                    width: 230
+                    height: parent.height
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
-                    font.bold: true
+                    text: value
+                    selectByMouse: true
+                    onEditingFinished:{
+                        editActionController.argsChanged(tag, argValue.text)
+                    }
                 }
 
                 PressAndHoldButton {
-                    anchors.right: rectangle2.right
-                    //text: "X"
-                    source: "/open-file.png"
+                    anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 35
-                    height: 35
+                    source: "list-delete.png"
+                
+                }
+            }
+            model: ListModel {
+                id:argListModel
+                objectName:"listmodelargs"
+                function addItem(newElement) {
+                    argListModel.append(newElement)
+                }
+                function gi(a){
+                    var values = [];
+                    for(var i = 0; i < argListModel.count; ++i){
+                        values.push(argListModel.get(i).name)
+                    }
+                    console.log(values)
+                    editActionController.argsChanged(argListModel, values);
                 }
             }
         }
-
-        Label {
-            id: label
-            x: 34
-            y: 148
-            text: qsTr("Parametro 1")
-            font.pointSize: 18
-        }
-
-        TextField {
-            id: textField
-            x: 228
-            y: 148
-            width: 233
-            height: 43
-            text: qsTr("")
-        }
-
-        TextField {
-            id: textField1
-            x: 228
-            y: 222
-            width: 233
-            height: 43
-            text: qsTr("")
-        }
-
-        Label {
-            id: label1
-            x: 34
-            y: 224
-            text: qsTr("Parametro 2")
-            font.pointSize: 18
+        RoundButton {
+            width: 75
+            height: 75
+            text: "+"
+            id: addArgButton
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            onClicked: {
+                //argListModel.append({name:"argument"})
+                editActionController.addActionArgument()
+            }
         }
     }
 }
-
