@@ -19,9 +19,10 @@ from typing import Union, Any, Dict, List, Callable
 trigger_templates: Dict[str, TriggerTemplate] = {}
 action_templates: Dict[str, ActionTemplate] = {}
 events: List[Event] = []
-
+script_root:str =''
 
 def main():
+    global script_root
     print()
 
     from pathlib import Path

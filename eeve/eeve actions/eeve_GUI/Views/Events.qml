@@ -58,7 +58,12 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter
                         z:2
                         Switch {
-                            //onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
+                            id: switchEnable
+                            checked:isEventEnabled
+
+                            onClicked: {
+                                eventsController.eventStateChanged(tag, switchEnable.checked)
+                            }
                         }
 
                         PressAndHoldButton {
@@ -89,9 +94,23 @@ Page {
     }
 
     RoundButton {
-        id: roundButton
-        x: 1131
-        y: 587
+        id: importButton
+        width: 75
+        height: 75
+        text: "i"
+        /* source: "open-file.png" */
+        anchors.right: parent.right
+        anchors.rightMargin: 73
+        anchors.bottom: addEventButton.top
+        anchors.bottomMargin: 28
+
+        onClicked: {
+            eventsController.importFile()
+        }
+    }
+
+    RoundButton {
+        id: addEventButton
         width: 75
         height: 75
         text: "+"

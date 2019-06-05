@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Union, Any, Callable, List, Tuple
 from eeve.wrapper import action_wrapper
-from travel_backpack import check_and_raise, except_and_print
+from travel_backpack import check_and_raise, except_and_print, format_exception_string
 
 
 @dataclass
@@ -181,12 +181,21 @@ class Trigger:
 
     def unregister(self, *args, **kwargs):
         print('\n\tunregistering trigger', self)
-        self._registered = False
-        return self._unregister(self.trigger_output_result, *args, **kwargs)
+        if self._registered:
+            self._registered = False
+            return self._unregister(self.trigger_output_result, *args, **kwargs)
 
     def register(self, task_start_func):
-        self.trigger_output_result = self._register(task_start_func, *self.args, **self.kwargs)
-        self._registered = True
+        if self._registered:
+            self.unregister(self.trigger_output_result)
+
+        try:
+            print('\n\tregistering trigger', self)
+            self.trigger_output_result = self._register(task_start_func, *self.args, **self.kwargs)
+            self._registered = True
+        except Exception as ex:
+            print(format_exception_string(ex))
+            
         return self.trigger_output_result
 
     @classmethod
@@ -225,11 +234,16 @@ class Event:
 
         self.register()
 
-    def start_task(self):
+    def start_task(self, *args, **kwargs):
+        print('triggering task')
         if self.enabled:
-            self.task.start()
+            print('task start')
+            self.task.start(*args, **kwargs)
+        else:
+            print('task ignore')
 
     def register(self):
+        print('\n\nregistering event', self)
         for trigger in self.triggers:
             trigger.register(self.start_task)
             self.unregister_info.append(trigger.unregister)
@@ -244,4 +258,5 @@ class Event:
         self.register()
 
     def __del__(self):
+        print('del was called')
         self.unregister()

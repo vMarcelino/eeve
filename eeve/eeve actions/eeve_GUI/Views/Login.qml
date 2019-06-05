@@ -90,7 +90,7 @@ Page {
             font.pointSize: 20
         }
     }
-
+/*
     RoundButton {
         id: roundButton
         y: 605
@@ -119,7 +119,7 @@ Page {
         //radius: 28
         //}
     }
-
+*/
 }
 
 

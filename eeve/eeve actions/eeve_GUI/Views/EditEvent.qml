@@ -56,13 +56,13 @@ Page {
                     font.pointSize: 13
                 }
 
-                PressAndHoldButton {
+                /* PressAndHoldButton {
                     anchors.right: parent.right
                     source: "open-file.png"
                     anchors.verticalCenter: parent.verticalCenter
                     width: 35
                     height: 35
-                }
+                } */
             }
 
             ListView {
@@ -154,13 +154,13 @@ Page {
                     font.pointSize: 13
                 }
 
-                PressAndHoldButton {
+                /* PressAndHoldButton {
                     anchors.right: parent.right
                     source: "open-file.png"
                     anchors.verticalCenter: parent.verticalCenter
                     width: 35
                     height: 35
-                }
+                } */
             }
 
             ListView {

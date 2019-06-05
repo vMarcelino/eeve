@@ -12,6 +12,7 @@ from uuid import uuid4
 
 
 class WinLowLevelHook(metaclass=travel_backpack.Singleton):
+    hook_thread:threading.Thread
     def __init__(self, keyboard_callback, mouse_callback):
         self.keyboard_callback = keyboard_callback
         self.mouse_callback = mouse_callback
@@ -20,12 +21,18 @@ class WinLowLevelHook(metaclass=travel_backpack.Singleton):
 
         self.hook_id_keyboard = None
         self.hook_id_mouse = None
+        self.running = False
+
+    def stop(self):
+        self.running =False
 
     def start(self, asynchronous=True):
         if asynchronous:
             print('async hook')
-            threading.Thread(target=self.start, kwargs={'asynchronous': False}).start()
-            return
+            t = threading.Thread(target=self.start, kwargs={'asynchronous': False})
+            self.running = True
+            t.start()
+            return t
 
         print('starting hook')
         keyboard_event_types = {
@@ -104,7 +111,7 @@ class WinLowLevelHook(metaclass=travel_backpack.Singleton):
         atexit.register(ctypes.windll.user32.UnhookWindowsHookEx, self.hook_id_keyboard)
         atexit.register(ctypes.windll.user32.UnhookWindowsHookEx, self.hook_id_mouse)
 
-        while True:
+        while self.running:
             #peek_result, msg = win32gui.PeekMessage(None, 0, 0, 1)
             result, msg = win32gui.GetMessage(None, 0, 0)
             print('got msg:', msg, result)
@@ -233,10 +240,18 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
             return True
 
         parser = InputParser(key_down_callback=keyboard_callback, key_up_callback=None, keys_down=self.keys_down)
-        hook = WinLowLevelHook(parser.process_keyboard_event, mouse_hook_callback)
+        self.hook = WinLowLevelHook(parser.process_keyboard_event, mouse_hook_callback)
 
         print('Starting input hook')
-        hook.start()
+        self.hook.start()
+
+    def check_callbacks(self):
+        if len(self.keyboard_callbacks) + \
+            len(self.mouse_down_callbacks) +\
+            len(self.mouse_move_callbacks) + \
+            len(self.keychains) == 0:
+            #self.hook.stop()
+            ...
 
     def add_keyboard_callback(self, callback):
         uuid = uuid4()
