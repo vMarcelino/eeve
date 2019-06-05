@@ -68,8 +68,8 @@ class GuiController(QWidget):
         view_name = base_name[:-len('Controller')] + view_posfix
         base_name = lower_first_char(base_name)
 
-        self.main_controller.viewPushed.emit(view_name + '.qml')
         self.main_controller.engine.rootContext().setContextProperty(base_name, c)
+        self.main_controller.viewPushed.emit(view_name + '.qml')
 
         c.load_page(*args, **kwargs)
 

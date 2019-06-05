@@ -3,7 +3,7 @@ import QtQuick.Controls 2.5
 
 Page {
     id: page
-    anchors.fill: parent
+    //anchors.fill: parent
     //width: 1280
     //height: 720
 

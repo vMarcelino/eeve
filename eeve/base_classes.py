@@ -14,14 +14,16 @@ class ActionTemplate:
     init_class: Union[Callable, None] = None
 
     @classmethod
-    def make(cls, *action_init_args, name, action_info: Union[dict, Callable], **action_init_kwargs) -> 'ActionTemplate':
+    def make(cls, *action_init_args, name, action_info: Union[dict, Callable],
+             **action_init_kwargs) -> 'ActionTemplate':
         self = cls(name=name, func=None)
         self.init_class = None
         if type(action_info) is dict:
             if 'class' in action_info:
                 self.init_class = action_info['class']
             else:
-                check_and_raise('run' in action_info, 'action_info must contain a "run" key with a callable as value', KeyError)
+                check_and_raise('run' in action_info, 'action_info must contain a "run" key with a callable as value',
+                                KeyError)
                 self.func = action_info['run']
                 if 'init' in action_info:
                     self.init_func = action_info['init']
@@ -38,7 +40,8 @@ class ActionTemplate:
             self.init_result = self.init_func(*action_init_args, **action_init_kwargs)
 
         if self.init_class:
-            check_and_raise(hasattr(self.init_class, 'run'), 'action_info must contain a "run" attribute', AttributeError)
+            check_and_raise(hasattr(self.init_class, 'run'), 'action_info must contain a "run" attribute',
+                            AttributeError)
             self.func = self.init_result.run
 
         return self
@@ -53,8 +56,10 @@ class ActionTemplate:
         return cls(**r)
 
     def reinitialize_with_args(self, *action_init_args, **action_init_kwargs):
-        check_and_raise(self.init_func,
-                        'Cannot initialize without an initialization function. Please provide an "init" key or a class on action_info', KeyError)
+        check_and_raise(
+            self.init_func,
+            'Cannot initialize without an initialization function. Please provide an "init" key or a class on action_info',
+            KeyError)
         self.init_result = self.init_func(*action_init_args, **action_init_kwargs)
         if self.init_class:
             self.func = self.init_result.run
@@ -81,9 +86,14 @@ class Action:
         if self.task_info_getter is not None:
             self.task_info_getter(self.init_result, task_info)
 
-    def __init__(self, *action_run_args, action_info: Union[ActionTemplate, dict, object], name=None, **action_run_kwargs):
+    def __init__(self,
+                 *action_run_args,
+                 action_info: Union[ActionTemplate, dict, object],
+                 name=None,
+                 **action_run_kwargs):
         if type(action_info) is not ActionTemplate:
-            check_and_raise(name, "parameter 'name' must be set when 'action_info' is not of type ActionTemplate", NameError)
+            check_and_raise(name, "parameter 'name' must be set when 'action_info' is not of type ActionTemplate",
+                            NameError)
 
             action_info = ActionTemplate.make(name=name, action_info=action_info)
 
@@ -130,10 +140,17 @@ class Task:  # I just wanted it to be organized as all the other classes
     """
     start: Callable
     actions: List[Action]
+    debug: bool
+    verbose: int
 
     def __init__(self, actions: List[Action], debug: bool = False, verbose=1):
         self.actions = actions
+        self.debug = debug
+        self.verbose = verbose
         self.start = action_wrapper(actions=actions, debug=debug, verbose=verbose)
+
+    def update_actions(self):
+        self.__init__(self.actions, self.debug, self.verbose)
 
 
 @dataclass
@@ -147,22 +164,38 @@ class TriggerTemplate:
 class Trigger:
     name: str
     _register: Callable
-    register: Callable
-    unregister: Callable
+    _unregister: Callable
     args: list
     kwargs: dict
+    trigger_output_result: Any
+    _registered: bool
 
     def __init__(self, *args, name: str, register: Callable, unregister: Callable, **kwargs):
         self.name = name
         self.args = args
         self.kwargs = kwargs
         self._register = register
-        self.register = lambda task: register(task, *self.args, **self.kwargs)
-        self.unregister = unregister
+        self._unregister = unregister
+        self._registered = False
+        self.trigger_output_result = None
+
+    def unregister(self, *args, **kwargs):
+        print('\n\tunregistering trigger', self)
+        self._registered = False
+        return self._unregister(self.trigger_output_result, *args, **kwargs)
+
+    def register(self, task_start_func):
+        self.trigger_output_result = self._register(task_start_func, *self.args, **self.kwargs)
+        self._registered = True
+        return self.trigger_output_result
 
     @classmethod
     def make(cls, *args, template: TriggerTemplate, **kwargs) -> 'Trigger':
         return cls(*args, name=template.name, register=template.register, unregister=template.unregister, **kwargs)
+
+    def __del__(self):
+        if self._registered:
+            self.unregister()
 
 
 @dataclass
@@ -173,7 +206,7 @@ class Event:
     Multiple triggers are supported for convenience so that
     all triggers can be unregistered at once for a given task.
     '''
-    unregister_info: List[Tuple[Callable, Any]]
+    unregister_info: List[Callable]
     triggers: List[Trigger]
     task: Task
     enabled: bool = True
@@ -184,19 +217,31 @@ class Event:
         self.enabled = enabled
 
         if name is None:
-            self.name = triggers[0].name
+            self.name = self.triggers[0].name
         else:
             self.name = name
 
         self.unregister_info = []
 
-        def start_task():
-            if self.enabled:
-                task.start()
+        self.register()
 
-        for trigger in triggers:
-            self.unregister_info.append((trigger.unregister, trigger.register(start_task)))
+    def start_task(self):
+        if self.enabled:
+            self.task.start()
+
+    def register(self):
+        for trigger in self.triggers:
+            trigger.register(self.start_task)
+            self.unregister_info.append(trigger.unregister)
 
     def unregister(self):
-        for unregister_func, trigger_output_result in self.unregister_info:
-            unregister_func(trigger_output_result)
+        print('\n\nunregistering event', self)
+        for unregister_func in self.unregister_info:
+            unregister_func()
+
+    def reinitialize_triggers(self):
+        self.unregister()
+        self.register()
+
+    def __del__(self):
+        self.unregister()

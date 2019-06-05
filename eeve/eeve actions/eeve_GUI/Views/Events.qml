@@ -5,7 +5,7 @@ Page {
     id: page
     //width: 1280
     //height: 720
-    anchors.fill: parent
+    //anchors.fill: parent
 
     title: "Eventos"
     ListView {
@@ -56,7 +56,7 @@ Page {
                         id: row
                         anchors.right: rectangle.right
                         anchors.verticalCenter: parent.verticalCenter
-
+                        z:2
                         Switch {
                             //onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
                         }
@@ -65,8 +65,9 @@ Page {
                             //text: "X"
                             source: "list-delete.png"
                             anchors.verticalCenter: parent.verticalCenter
-                            //width: 40
-                            //height: 40
+                            onClicked:{
+                                eventsController.deleteEvent(tag)
+                            }
                         }
                     }
 
@@ -80,6 +81,9 @@ Page {
             objectName:"listmodel"
             function addItem(newElement) {
                 sampleModel.append(newElement)
+            }
+            function clearItems(a){
+                sampleModel.clear()
             }
         }
     }

@@ -12,15 +12,7 @@ class EditEventController(GuiController):
 
     eventEditInitialized = pyqtSignal(str, arguments=['eventName'])
 
-    def load_page(self, event: Event = None, clear=False):
-
-        if event is None:
-            event = Event(
-                triggers=[Trigger.make(template=eeve.trigger_templates['on eeve startup'])],
-                task=Task([Action('notepad', action_info=eeve.action_templates['run'])]),
-                name='Novo evento',
-                enabled=False)
-
+    def load_page(self, event: Event, clear=False):
         self.selected_event = event
         self.editing_trigger = None
         self.editing_action = None
@@ -60,17 +52,28 @@ class EditEventController(GuiController):
 
     @pyqtSlot(QObject, int, int)
     def clickedTrigger(self, r, index, data):
-        print('selected trigger:', self.selected_event.triggers[data])
+        #print('selected trigger:', self.selected_event.triggers[data])
         r.setProperty('color', '#ff0000')
         self.editing_trigger = data
         self.load_controller(EditTriggerController, self.selected_event.triggers[data])
 
     @pyqtSlot(QObject, int, int)
     def clickedAction(self, r, index, data):
-        print('selected action:', self.selected_event.task.actions[data])
+        #print('selected action:', self.selected_event.task.actions[data])
         r.setProperty('color', '#ff0000')
         self.editing_action = data
         self.load_controller(EditActionController, self.selected_event.task.actions[data])
+
+    @pyqtSlot( int)
+    def deleteAction(self,  index):
+        self.selected_event.task.actions.pop(index)
+        self.selected_event.task.update_actions()
+        self.load_page(event=self.selected_event, clear=True)
+    @pyqtSlot( int)
+    def deleteTrigger(self, index):
+        self.selected_event.triggers[index].unregister()
+        self.selected_event.triggers.pop(index)
+        self.load_page(event=self.selected_event, clear=True)
 
     @pyqtSlot(str)
     def nameChanged(self, name):
@@ -91,4 +94,9 @@ class EditEventController(GuiController):
             else:
                 self.selected_event.task.actions.append(action)
 
+            self.selected_event.task.update_actions()
+
         self.load_page(event=self.selected_event, clear=True)
+
+    def unload_page(self):
+        return self.selected_event

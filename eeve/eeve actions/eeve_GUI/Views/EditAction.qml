@@ -3,7 +3,7 @@ import QtQuick.Controls 2.5
 
 Page {
     id: page
-    anchors.fill: parent
+    //anchors.fill: parent
 
     title: "Editar Ação"
     Rectangle {
@@ -41,13 +41,13 @@ Page {
                 }
             }
 
-            PressAndHoldButton {
+            /*PressAndHoldButton {
                 anchors.right: parent.right
                 source: "open-file.png"
                 anchors.verticalCenter: parent.verticalCenter
                 width: 35
                 height: 35
-            }
+            }*/
         }
         
         ListView {
@@ -86,7 +86,9 @@ Page {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     source: "list-delete.png"
-                
+                    onClicked:{
+                        editActionController.deleteArg(tag)
+                    }
                 }
             }
             model: ListModel {
@@ -94,6 +96,9 @@ Page {
                 objectName:"listmodelargs"
                 function addItem(newElement) {
                     argListModel.append(newElement)
+                }
+                function clearItems(a){
+                    argListModel.clear()
                 }
                 function gi(a){
                     var values = [];

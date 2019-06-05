@@ -5,7 +5,7 @@ Page {
     id: page
     //width: 1280
     //height: 720
-    anchors.fill: parent
+    //anchors.fill: parent
 
     title: "Editar Evento"
     Row {
@@ -102,6 +102,11 @@ Page {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         source: "list-delete.png"
+                        z:2
+
+                        onClicked:{
+                            editEventController.deleteTrigger(tag)
+                        }
                     
                     }
                 }
@@ -194,7 +199,11 @@ Page {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         source: "list-delete.png"
-                    
+                        z:2
+
+                        onClicked:{
+                            editEventController.deleteAction(tag)
+                        }
                     }
                 }
                 model: ListModel {

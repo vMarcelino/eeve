@@ -1,8 +1,8 @@
-from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QAbstractListModel
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QAbstractListModel  # pylint: disable=no-name-in-module
 
 import eeve
 from eeve.base_classes import Event, Trigger, Task, Action
-from .. import GuiController
+from .. import GuiController  # pylint: disable=relative-beyond-top-level
 
 
 class EditTriggerController(GuiController):
@@ -35,7 +35,9 @@ class EditTriggerController(GuiController):
 
     @pyqtSlot(str)
     def triggerChanged(self, trigger_name):
-        self.trigger = Trigger.make(*self.trigger.args, template=eeve.trigger_templates[trigger_name], **self.trigger.kwargs)
+        self.trigger = Trigger.make(*self.trigger.args,
+                                    template=eeve.trigger_templates[trigger_name],
+                                    **self.trigger.kwargs)
         print(self.trigger)
 
     @pyqtSlot(int, str)
@@ -55,6 +57,18 @@ class EditTriggerController(GuiController):
         self.trigger.args.append(f'arg {i}')
 
         self.invoke(result, "addItem", {'value': self.trigger.args[i], 'tag': i})
+
+    @pyqtSlot(int)
+    def deleteArg(self, index):
+        root = self.main_controller.engine.rootObjects()
+        root = root[0]
+        result = root.findChild(QAbstractListModel, "listmodelargs")
+        self.invoke(result, "clearItems", None)
+
+        self.trigger.args: list = list(self.trigger.args)
+        self.trigger.args.pop(index)
+
+        self.load_page(trigger=self.trigger)
 
 
 def print_child(obj, i=0):

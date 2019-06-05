@@ -4,8 +4,8 @@ import QtQuick.Controls 2.5
 ApplicationWindow {
     id: window
     visible: true
-    width: 900
-    height:600
+    width: 1080
+    height:700
     minimumWidth: 850
     minimumHeight: 500
 
@@ -26,7 +26,7 @@ ApplicationWindow {
                     controller.popView()
                     stackView.pop()
                 } else {
-                    drawer.open()
+                    //drawer.open()
                 }
             }
         }
