@@ -25,6 +25,7 @@ class EventsController(GuiController):
                       name='Novo evento',
                       enabled=False)
         eeve.events.append(event)
+        # create whole event chain
         self.load_controller(EditEventController, event)
 
     @pyqtSlot(QObject, int, int)
@@ -37,6 +38,7 @@ class EventsController(GuiController):
     def deleteEvent(self, i):
         deleted_event = eeve.events.pop(i)
         deleted_event.unregister()
+        # delete whole event chain
         self.load_page()
 
     @pyqtSlot(int, bool)
@@ -55,11 +57,11 @@ class EventsController(GuiController):
         filedialog = FileDialog.openFileNamesDialog()
 
         destination_path = os.path.join(eeve.script_root, 'eeve plugins')
+        if filedialog:
+            for file_name in filedialog:
+                travel_backpack.copy(file_name, destination_path, dst_is_file=False)
 
-        for file_name in filedialog:
-            travel_backpack.copy(file_name, destination_path, is_file=False)
 
-
-        eeve.load_triggers_from_path(destination_path)
-        eeve.load_actions_from_path(destination_path)
-        print()
+            eeve.load_triggers_from_path(destination_path)
+            eeve.load_actions_from_path(destination_path)
+            print()
