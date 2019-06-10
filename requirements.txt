@@ -7,4 +7,6 @@ requests
 
 sqlalchemy
 
+pyqt5
+
 travel-backpack
