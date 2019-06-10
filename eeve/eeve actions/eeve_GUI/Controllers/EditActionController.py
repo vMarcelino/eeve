@@ -1,22 +1,36 @@
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QAbstractListModel  # pylint: disable=no-name-in-module
+from PyQt5.QtWidgets import QMessageBox
 
 import eeve
 from eeve.base_classes import Event, Task, Action
 from .. import GuiController  # pylint: disable=relative-beyond-top-level
 import inspect
+from eeve import database
+from dataclasses import dataclass
+
+
+@dataclass
+class ParamInfo:
+    required: list
+    optional: list
+    accept_args: bool
+    accept_kwargs: bool
 
 
 class EditActionController(GuiController):
-    def load_page(self, action: Action = None):
+    def load_page(self, action: Action, database_ref: database.Action):
 
         self.action = action
+        self.database_ref = database_ref
         if self.action is None:
             self.action = Action(action_info=eeve.action_templates['start gui'])
 
         root = self.main_controller.engine.rootObjects()
         root = root[0]
         result = root.findChild(QAbstractListModel, "actionListModel")
+        self.invoke(result, 'clearItems', None)
         index = 0
+        self.param_info = {}
         for i, action_name in enumerate(eeve.action_templates):
             ac = eeve.action_templates[action_name].func
             print(action_name)
@@ -39,8 +53,11 @@ class EditActionController(GuiController):
                     pass
             except:
                 accept_args = accept_kwargs = True
+
+            self.param_info[action_name] = ''
+
             if req_args:
-                print('\trequired:')
+                self.param_info[action_name] += '\trequired:\n'
                 for arg, annotation in req_args:
                     ant = '?'
                     if annotation != inspect._empty:
@@ -49,9 +66,9 @@ class EditActionController(GuiController):
                         else:
                             ant = str(annotation)
 
-                    print('\t\tname:', arg, ', type:', ant)
+                    self.param_info[action_name] += f'\t\tname: {arg} type: {ant}\n'
             if opt_args:
-                print('\toptional:')
+                self.param_info[action_name] += '\toptional:\n'
                 for arg, annotation, value in opt_args:
                     ant = '?'
                     if annotation != inspect._empty:
@@ -60,11 +77,12 @@ class EditActionController(GuiController):
                         else:
                             ant = str(annotation)
 
-                    print('\t\tname:', arg, ', type:', ant, ', value:',value)
+                    self.param_info[action_name] += f'\t\tname: {arg} type: {ant}, value: {value}\n'
+
             if accept_args:
-                print('\taccepts args')
+                self.param_info[action_name] += '\taccepts args\n'
             if accept_kwargs:
-                print('\taccepts kwargs')
+                self.param_info[action_name] += '\taccepts kwargs\n'
 
             self.invoke(result, 'addItem', str(action_name))
             if action_name == self.action.name:
@@ -80,13 +98,18 @@ class EditActionController(GuiController):
 
     def unload_page(self):
         print('unloading page')
-        return self.action
+        return self.action, self.database_ref
+
+    @pyqtSlot()
+    def showParametersInfo(self):
+        QMessageBox.information(None, 'Ajuda: Parâmetros', self.param_info[self.action.name])
 
     @pyqtSlot(str)
     def actionChanged(self, action_name):
         self.action = Action(*self.action.run_args,
                              action_info=eeve.action_templates[action_name],
                              **self.action.run_kwargs)
+        self.database_ref.name = action_name
         print(self.action)
 
     @pyqtSlot(int, str)
@@ -94,6 +117,7 @@ class EditActionController(GuiController):
         print(index, value)
         self.action.run_args = list(self.action.run_args)
         self.action.run_args[index] = value
+        self.database_ref.arguments[index] = database.ActionArgument(value=value)
 
     @pyqtSlot()
     def addActionArgument(self):
@@ -104,6 +128,7 @@ class EditActionController(GuiController):
         i = len(self.action.run_args)
         self.action.run_args = list(self.action.run_args)
         self.action.run_args.append(f'arg {i}')
+        self.database_ref.arguments.append(database.ActionArgument(value=f'arg {i}'))
 
         self.invoke(result, "addItem", {'value': self.action.run_args[i], 'tag': i})
 
@@ -116,8 +141,10 @@ class EditActionController(GuiController):
 
         self.action.run_args: list = list(self.action.run_args)
         self.action.run_args.pop(index)
+        i = self.database_ref.arguments.pop(index)
+        #delete i
 
-        self.load_page(action=self.action)
+        self.load_page(action=self.action, database_ref=self.database_ref)
 
 
 def print_child(obj, i=0):

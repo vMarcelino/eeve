@@ -12,14 +12,17 @@ from .importer import import_from_folder
 from .wrapper import action_wrapper
 from .base_classes import Action, ActionTemplate, Trigger, TriggerTemplate, Event, Task
 from . import mappings
+from . import database
 
 from typing import Union, Any, Dict, List, Callable
+from sqlalchemy import func
 #from .ts import test_sampler_decorator
 
 trigger_templates: Dict[str, TriggerTemplate] = {}
 action_templates: Dict[str, ActionTemplate] = {}
 events: List[Event] = []
-script_root:str =''
+script_root: str = ''
+
 
 def main():
     global script_root
@@ -35,7 +38,9 @@ def main():
     load_actions_from_path(os.path.join(script_root, 'eeve plugins'))
 
     conf_root = os.path.join(Path.home(), 'Documents', 'eeve')
-    conf_file = os.path.join(conf_root, 'eeve events.txt')
+    #conf_file = os.path.join(conf_root, 'eeve events.txt')
+    conf_db_file = os.path.join(conf_root, 'eeve.db')
+    '''
     if os.path.isfile(conf_file):
         with open(conf_file) as f:
             _all_events = f.read().replace('|||\n', '').split('\n')
@@ -43,6 +48,10 @@ def main():
         load_events(_all_events)
     else:
         print('no conf file at', conf_file)
+    '''
+    #database.open_db_file(None)
+    database.open_db_file(conf_db_file)
+    load_events_from_db()
 
 
 def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dict, Callable]):
@@ -70,10 +79,12 @@ def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dic
         trigger_templates[name] = tt
 
     elif type(trigger) is dict:
-        trigger_templates[name] = TriggerTemplate(name=name, register=trigger['register'], unregister=trigger['unregister'])
+        trigger_templates[name] = TriggerTemplate(
+            name=name, register=trigger['register'], unregister=trigger['unregister'])
 
     else:
-        travel_backpack.check_and_raise(hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
+        travel_backpack.check_and_raise(
+            hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
         add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
 
@@ -98,7 +109,8 @@ def remove_trigger_template(name: str, unregister=False):
         del trigger_templates[name]
 
 
-def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args, **action_init_kwargs):
+def add_action_template(name: str, action_info: Union[Action, ActionTemplate, dict, Callable], *action_init_args,
+                        **action_init_kwargs):
     """Adds an ActionTemplate that can be used as base to an Action instance
     
     Arguments:
@@ -116,7 +128,8 @@ def add_action_template(name: str, action_info: Union[Action, ActionTemplate, di
         action_templates[name] = at
 
     else:
-        action_templates[name] = ActionTemplate.make(name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
+        action_templates[name] = ActionTemplate.make(
+            name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
 
 
 def remove_action_template(name: str):
@@ -161,7 +174,52 @@ def load_actions_from_path(path):
     print()
 
 
-def load_events(_all_events: list):
+def load_events_from_db():
+    session = database.Session()
+    r = session.query(func.count(database.Event.id)).scalar()
+    print(r)
+    if r == 0:
+        database.add_default_event()
+
+    for event in session.query(database.Event):
+        try:
+            print(event.name)
+            triggers = []
+            for trigger in event.triggers:
+                print(trigger.name)
+                trigger_args = []
+                trigger_kwargs = {}
+                for arg in trigger.arguments:
+                    if arg.key is not None:
+                        trigger_kwargs[arg.key] = arg.value
+                    else:
+                        trigger_args.append(arg.value)
+
+                triggers.append(Trigger.make(*trigger_args, template=trigger_templates[trigger.name], **trigger_kwargs))
+
+            actions = []
+            for action in event.task.actions:
+                print(action.name)
+                action_args = []
+                action_kwargs = {}
+                for arg in action.arguments:
+                    if arg.key is not None:
+                        action_kwargs[arg.key] = arg.value
+                    else:
+                        action_args.append(arg.value)
+
+                actions.append(Action(*action_args, action_info=action_templates[action.name], **action_kwargs))
+
+            task = Task(actions=actions)
+            events.append(Event(triggers=triggers, task=task, name=event.name, tag=event.id))
+
+        except Exception as ex:
+            print('failed to add event', ex)
+
+    print()
+
+
+def load_events_from_str_list(_all_events: list):
     print('--loading events--')
     for event in _all_events:
         if event and not event.startswith('#'):
@@ -194,7 +252,8 @@ def load_events(_all_events: list):
                     actions.append(_action)
 
                 task = Task(actions, debug=show_traceback, verbose=verbose)
-                trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                trigger = Trigger.make(
+                    *trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
                 print('Starting trigger')
                 event = Event(triggers=[trigger], task=task)  # starts the trigger
                 print('Trigger started')

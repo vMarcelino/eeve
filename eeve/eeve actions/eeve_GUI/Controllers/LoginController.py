@@ -1,7 +1,9 @@
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, Qt  # pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import QWidget  # pylint: disable=no-name-in-module
+from PyQt5.QtWidgets import QWidget, QMessageBox  # pylint: disable=no-name-in-module
 from .EventsController import EventsController
 from .. import GuiController
+
+from eeve import database
 
 
 class LoginController(GuiController):
@@ -10,6 +12,12 @@ class LoginController(GuiController):
 
     @pyqtSlot(str, str)
     def login(self, user_name: str, password: str) -> None:
-        print(user_name, password)
-        if user_name == 'batatata' and password == 'bananinha' or True:
-            self.load_controller(EventsController)
+        try:
+            print(user_name, password)
+            session = database.Session()
+            u = session.query(database.User).filter(database.User.login == user_name).filter(
+                database.User.password == password).one()
+            if u:
+                self.load_controller(EventsController)
+        except:
+            result = QMessageBox.warning(None, 'Aviso', 'Os dados inseridos estão incorretos.')

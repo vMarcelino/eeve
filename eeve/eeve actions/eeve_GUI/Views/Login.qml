@@ -69,8 +69,6 @@ Page {
             font.capitalization: Font.Capitalize
             focusPolicy: Qt.NoFocus
 
-
-
             onClicked:{
                 loginController.login(textFieldUser.text, textFieldPassword.text)
             }

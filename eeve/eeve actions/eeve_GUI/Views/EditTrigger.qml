@@ -35,6 +35,9 @@ Page {
                     function addItem(newElement) {
                         tlm.append({text : newElement})
                     }
+                    function clearItems(a){
+                        tlm.clear()
+                    }
                 }
                 onCurrentIndexChanged:{
                     editTriggerController.triggerChanged(tlm.get(currentIndex).text)

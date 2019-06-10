@@ -195,7 +195,7 @@ class Trigger:
             self._registered = True
         except Exception as ex:
             print(format_exception_string(ex))
-            
+
         return self.trigger_output_result
 
     @classmethod
@@ -219,11 +219,13 @@ class Event:
     triggers: List[Trigger]
     task: Task
     enabled: bool = True
+    tag: any = None
 
-    def __init__(self, triggers: List[Trigger], task: Task, name=None, enabled=True):
+    def __init__(self, triggers: List[Trigger], task: Task, name=None, enabled=True, tag=None):
         self.triggers = triggers
         self.task = task
         self.enabled = enabled
+        self.tag = tag
 
         if name is None:
             self.name = self.triggers[0].name
@@ -247,6 +249,8 @@ class Event:
         for trigger in self.triggers:
             trigger.register(self.start_task)
             self.unregister_info.append(trigger.unregister)
+
+        # sql update
 
     def unregister(self):
         print('\n\nunregistering event', self)
