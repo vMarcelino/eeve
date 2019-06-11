@@ -82,6 +82,8 @@ def invoke(obj, func_name: str, value, var_type=QVariant):
 
 
 def main():
+    """Shows the GUI for event configuration
+    """
     from .Controllers.LoginController import LoginController
     try:
         print('Starting GUI')

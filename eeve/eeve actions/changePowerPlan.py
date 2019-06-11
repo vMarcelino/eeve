@@ -43,7 +43,12 @@ if __name__ == '__main__':
 
 
 class SetPowerPlan:
-    def run(self, plan_name):
+    def run(self, plan_name:str):
+        """Sets the computer power plan
+        
+        Arguments:
+            plan_name {str} -- power plan name
+        """
         _, active_plan = get_power_plan_info(print_to_screen=False)
         print("Last power plan:", active_plan)
 

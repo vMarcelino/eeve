@@ -151,18 +151,33 @@ def round_up_time_delta(td: timedelta) -> timedelta:
 
 
 def log_activity():
+    """Tells the logger to reset inactivity countdown.
+    
+    Requires logger initialized
+    """
     if timer_initialized:
         t = Timer()
         t.update()
 
 
 def log_activity_and_current_window():
+    """Checks and logs the current window and time of active application
+    and tells the logger to reset inactivity countdown.
+
+    Requires logger initialized
+    """
     if timer_initialized:
         t = Timer()
         t.update(True)
 
 
-def initialize_logger(time, log_path):
+def initialize_logger(time: float, log_path: str):
+    """Initializes logger with a countdown timer set to 'time' variable
+    
+    Arguments:
+        time {float} -- time in seconds to inactivity
+        log_path {str} -- path to store the activity log
+    """
     global timer_runing
     if not timer_runing:
         timer_runing = True

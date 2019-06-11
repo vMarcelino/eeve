@@ -6,7 +6,19 @@ class IfAction:
         """Flow control action. Takes multiple arguments and applies the given logic operator. Result can also be inverted through 'inverse' flag.
 
         Argument examples:
-            
+            check if is night and is first time firing
+                $is_night
+                $times_fired = 0
+
+            check if door is open and there is no one home
+                $is_door_open
+                $is_home = False
+
+            check if battery is low
+                $is_battery_low
+
+            check if battery is at 20%
+                $battery = 20
         
         Keyword Arguments:
             logic {str} -- logic to be applied to arguments (default: {'AND'})

@@ -52,7 +52,7 @@ class VariableGroup:
             return default
 
     def get_or_create(self, var: str, default=None) -> Variable:
-        """Returns the existing variable if it exists. If it
+        """Returns the existing variable reference if it exists. If it
         does not, the variable is created and added to the scope
         with the supplied default value
         
@@ -71,6 +71,13 @@ class VariableGroup:
         return self.vars[var]
 
     def to_kwargs(self) -> dict:
+        """Returns all variable names and values in a dictionary
+
+        var_name:var_value
+        
+        Returns:
+            dict -- Dictionary with all variable names and values
+        """
         result = dict()
         for k, v in self.vars.items():
             result[k] = v.value
