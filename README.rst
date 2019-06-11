@@ -5,8 +5,8 @@ eeve
     :target: https://pypi.python.org/pypi/eeve
     :alt: Latest PyPI version
 
-.. image::  .png
-   :target:  
+.. image::  https://travis-ci.org/vMarcelino/eeve.svg?branch=master
+   :target:  https://travis-ci.org/vMarcelino/eeve
    :alt: Latest Travis CI build status
 
 A flexible, powerfull and simple event trigger
