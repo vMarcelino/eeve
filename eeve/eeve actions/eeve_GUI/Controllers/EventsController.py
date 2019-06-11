@@ -1,5 +1,7 @@
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, Qt, QAbstractListModel  # pylint: disable=no-name-in-module
 from PyQt5.QtWidgets import QWidget  # pylint: disable=no-name-in-module
+from typing import Tuple
+
 from .EditEventController import EditEventController  # pylint: disable=relative-beyond-top-level
 from .. import GuiController, primary_color  # pylint: disable=relative-beyond-top-level
 
@@ -22,11 +24,10 @@ class EventsController(GuiController):
 
     @pyqtSlot()
     def addEvent(self):
-        event = Event(
-            triggers=[Trigger.make(template=eeve.trigger_templates['on eeve startup'])],
-            task=Task([Action('notepad', action_info=eeve.action_templates['run'])]),
-            name='Novo evento',
-            enabled=False)
+        event = Event(triggers=[Trigger.make(template=eeve.trigger_templates['on eeve startup'])],
+                      task=Task([Action('notepad', action_info=eeve.action_templates['run'])]),
+                      name='Novo evento',
+                      enabled=False)
         eeve.events.append(event)
 
         # create whole event chain
@@ -37,7 +38,7 @@ class EventsController(GuiController):
                 actions=[database.Action(name='run', arguments=[database.ActionArgument(value='notepad')])]))
 
         self.session.add(ev)
-        self.session.commit() # commit here so that the id property is updated to use in line below
+        self.session.commit()  # commit here so that the id property is updated to use in line below
         event.tag = ev.id
         self.load_controller(EditEventController, event, ev)
 
@@ -61,17 +62,18 @@ class EventsController(GuiController):
         self.load_page()
 
     @pyqtSlot(int, bool)
-    def eventStateChanged(self, index:int, value:bool):
+    def eventStateChanged(self, index: int, value: bool):
         eeve.events[index].enabled = value
         ev = self.session.query(database.Event).filter(database.Event.id == eeve.events[index].tag).one()
         ev.enabled = value
         self.session.commit()
 
-
-    def regain_focus(self, event: Event):
+    def regain_focus(self, event: Tuple[Event, database.Event]):
         print('event updated')
+        event, db_ref = event
         event.reinitialize_triggers()
         event.enabled = True
+        db_ref.enabled = True
         self.session.commit()
         self.load_page()
 

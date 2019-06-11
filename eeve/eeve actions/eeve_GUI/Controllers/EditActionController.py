@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QAbstractListModel  # pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox  # pylint: disable=no-name-in-module
 
 import eeve
 from eeve.base_classes import Event, Task, Action
@@ -55,6 +55,8 @@ class EditActionController(GuiController):
                 accept_args = accept_kwargs = True
 
             self.param_info[action_name] = ''
+            if ac.__doc__:
+                self.param_info[action_name] += ac.__doc__ + '\n' + ('-' * 25) + '\n\n'
 
             if req_args:
                 self.param_info[action_name] += '\trequired:\n'
@@ -66,7 +68,7 @@ class EditActionController(GuiController):
                         else:
                             ant = str(annotation)
 
-                    self.param_info[action_name] += f'\t\tname: {arg} type: {ant}\n'
+                    self.param_info[action_name] += f'\t\tname: {arg},    type: {ant}\n'
             if opt_args:
                 self.param_info[action_name] += '\toptional:\n'
                 for arg, annotation, value in opt_args:
@@ -77,7 +79,7 @@ class EditActionController(GuiController):
                         else:
                             ant = str(annotation)
 
-                    self.param_info[action_name] += f'\t\tname: {arg} type: {ant}, value: {value}\n'
+                    self.param_info[action_name] += f'\t\tname: {arg},   default: {value},    type: {ant}\n'
 
             if accept_args:
                 self.param_info[action_name] += '\taccepts args\n'

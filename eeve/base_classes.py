@@ -12,6 +12,7 @@ class ActionTemplate:
     task_info_getter: Union[Callable, None] = None
     init_func: Union[Callable, None] = None
     init_class: Union[Callable, None] = None
+    description:str=''
 
     @classmethod
     def make(cls, *action_init_args, name, action_info: Union[dict, Callable],
@@ -28,10 +29,15 @@ class ActionTemplate:
                 if 'init' in action_info:
                     self.init_func = action_info['init']
 
+            if 'description' in action_info:
+                self.description = action_info['description']
+
             self.task_info_getter = action_info.get('task_info', None)
 
         else:
             self.init_class = action_info
+            if hasattr(self.init_class, 'description'):
+                self.description = self.init_class.description
 
         if self.init_class:
             self.init_func = self.init_class
@@ -158,6 +164,7 @@ class TriggerTemplate:
     name: str
     register: Callable
     unregister: Callable
+    description:str=''
 
 
 @dataclass

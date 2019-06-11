@@ -134,4 +134,4 @@ class EditEventController(GuiController):
         self.load_page(event=self.selected_event, database_ref=self.database_ref, clear=True)
 
     def unload_page(self):
-        return self.selected_event
+        return self.selected_event, self.database_ref

@@ -45,16 +45,16 @@ Page {
             }
 
 
-        RoundButton {
-            width: 60
-            height: 60
-            text: "?"
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            onClicked: {
-                //argListModel.append({name:"argument"})
-                editActionController.showParametersInfo()
-            }
+            RoundButton {
+                width: 60
+                height: 60
+                text: "?"
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    //argListModel.append({name:"argument"})
+                    editActionController.showParametersInfo()
+                }
         }
 
             /*PressAndHoldButton {
