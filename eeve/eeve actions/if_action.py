@@ -2,8 +2,16 @@ from eeve.taskinfo import TaskInfo
 
 
 class IfAction:
-    def run(self, *args, logic='AND', inverse=False, **kwargs):
-        #print('if statement')
+    def run(self, *args, logic: 'Union[AND, OR, XOR]' = 'AND', inverse: bool = False, **kwargs):
+        """Flow control action. Takes multiple arguments and applies the given logic operator. Result can also be inverted through 'inverse' flag.
+
+        Argument examples:
+            
+        
+        Keyword Arguments:
+            logic {str} -- logic to be applied to arguments (default: {'AND'})
+            inverse {bool} -- To invert the final result (default: {False})
+        """
         self.logic = logic.lower()
         if hasattr(self, 'info'):
             name = self.info.actions[self.info.current_action_index].name
@@ -52,7 +60,11 @@ class IfAction:
         for k, v in kwargs.items():
             resolves.append(self.info.get_var(k) == self.info.get_var(v))
 
-        mapping = {'and': (True, lambda x, y: x and y), 'or': (False, lambda x, y: x or y), 'xor': (False, lambda x, y: x ^ y)}
+        mapping = {
+            'and': (True, lambda x, y: x and y),
+            'or': (False, lambda x, y: x or y),
+            'xor': (False, lambda x, y: x ^ y)
+        }
         result = mapping.get(self.logic, [True])[0]
         for i in resolves:
             result = mapping[self.logic][1](result, i)

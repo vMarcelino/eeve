@@ -35,11 +35,27 @@ Page {
                     function addItem(newElement) {
                         tlm.append({text : newElement})
                     }
+                    function clearItems(a){
+                        tlm.clear()
+                    }
                 }
                 onCurrentIndexChanged:{
                     editActionController.actionChanged(tlm.get(currentIndex).text)
                 }
             }
+
+
+            RoundButton {
+                width: 60
+                height: 60
+                text: "?"
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    //argListModel.append({name:"argument"})
+                    editActionController.showParametersInfo()
+                }
+        }
 
             /*PressAndHoldButton {
                 anchors.right: parent.right

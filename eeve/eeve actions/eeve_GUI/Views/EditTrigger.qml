@@ -35,19 +35,26 @@ Page {
                     function addItem(newElement) {
                         tlm.append({text : newElement})
                     }
+                    function clearItems(a){
+                        tlm.clear()
+                    }
                 }
                 onCurrentIndexChanged:{
                     editTriggerController.triggerChanged(tlm.get(currentIndex).text)
                 }
             }
 
-            /* PressAndHoldButton {
+            RoundButton {
+                width: 60
+                height: 60
+                text: "?"
                 anchors.right: parent.right
-                source: "open-file.png"
                 anchors.verticalCenter: parent.verticalCenter
-                width: 35
-                height: 35
-            } */
+                onClicked: {
+                    //argListModel.append({name:"argument"})
+                    editTriggerController.showParametersInfo()
+                }
+            }
         }
         
         ListView {

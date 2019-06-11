@@ -5,5 +5,8 @@
 # eeve\eeve actions\REST_request.py: 1
 requests 
 
+sqlalchemy
 
 travel-backpack
+
+dataclasses
