@@ -1,6 +1,6 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '1.6.0'
+__version__ = '1.6.1'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
