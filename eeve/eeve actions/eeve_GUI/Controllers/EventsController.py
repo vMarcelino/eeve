@@ -37,7 +37,7 @@ class EventsController(GuiController):
                 actions=[database.Action(name='run', arguments=[database.ActionArgument(value='notepad')])]))
 
         self.session.add(ev)
-        self.session.commit()
+        self.session.commit() # commit here so that the id property is updated to use in line below
         event.tag = ev.id
         self.load_controller(EditEventController, event, ev)
 
@@ -53,12 +53,20 @@ class EventsController(GuiController):
     def deleteEvent(self, i):
         deleted_event = eeve.events.pop(i)
         deleted_event.unregister()
+
+        self.session.delete(self.session.query(database.Event).filter(database.Event.id == deleted_event.tag).one())
+        self.session.commit()
+
         #delete whole event chain
         self.load_page()
 
     @pyqtSlot(int, bool)
-    def eventStateChanged(self, index, value):
+    def eventStateChanged(self, index:int, value:bool):
         eeve.events[index].enabled = value
+        ev = self.session.query(database.Event).filter(database.Event.id == eeve.events[index].tag).one()
+        ev.enabled = value
+        self.session.commit()
+
 
     def regain_focus(self, event: Event):
         print('event updated')

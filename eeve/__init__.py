@@ -211,7 +211,7 @@ def load_events_from_db():
                 actions.append(Action(*action_args, action_info=action_templates[action.name], **action_kwargs))
 
             task = Task(actions=actions)
-            events.append(Event(triggers=triggers, task=task, name=event.name, tag=event.id))
+            events.append(Event(triggers=triggers, task=task, name=event.name, tag=event.id, enabled=event.enabled))
 
         except Exception as ex:
             print('failed to add event', ex)

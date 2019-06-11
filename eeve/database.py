@@ -18,7 +18,7 @@ class Event(Base):
     __tablename__ = 'events'
     id = Column('id', Integer, primary_key=True)
     name = Column('name', String)
-    enabled = Column('enabled', Boolean, nullable=False, default=False)
+    enabled = Column('enabled', Boolean, nullable=False, default=True)
     task_id = Column('task_id', Integer, ForeignKey('tasks.id'), unique=True)
 
     task = relationship("Task", backref=backref('event'), uselist=False)
@@ -92,10 +92,28 @@ def open_db_file(path: str):
 def add_default_event():
     session = Session()
 
-    event1 = Event(
-        name='Default event',
-        users=[User(login='root', password='toor')],
-        triggers=[Trigger(name='on eeve startup')],
-        task=Task(actions=[Action(name='start gui')]))
+    event1 = Event(name='Default event',
+                   users=[User(login='root', password='toor')],
+                   triggers=[Trigger(name='on eeve startup')],
+                   task=Task(actions=[Action(name='start gui')]))
     session.add(event1)
     session.commit()
+    session.close()
+
+
+def check_credentials(user_name: str, password: str) -> bool:
+    try:
+        print(user_name, password)
+        session = Session()
+        u = session.query(User).filter(User.login == user_name).filter(User.password == password).one()
+        session.close()
+        print(u)
+        if u:
+            print('deu bom')
+            return True
+        else:
+            print('deu ruim')
+            return False
+    except:
+        print('exceção')
+        return False
