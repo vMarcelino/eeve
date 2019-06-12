@@ -12,7 +12,7 @@ class LoginController(GuiController):
 
     @pyqtSlot(str, str)
     def login(self, user_name: str, password: str) -> bool:
-        if database.check_credentials(user_name, password) or True:
+        if database.check_credentials(user_name, password):
             self.load_controller(EventsController)
         else:
             QMessageBox.warning(None, 'Aviso', 'Os dados inseridos estão incorretos.')
