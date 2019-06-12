@@ -15,3 +15,4 @@ def run(command: str):
 
 
 # actions = {'run': {'run': os.system}}  # could just do this but I want to comment
+actions = {'run': {'run': run}}
