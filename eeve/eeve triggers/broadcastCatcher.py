@@ -3,7 +3,7 @@ import win32con
 import win32api
 import win32gui
 import time
-from ctypes import POINTER, windll, Structure, cast, CFUNCTYPE, c_int, c_uint, c_void_p, c_bool, sizeof, Union, c_ushort, c_ulong, c_long, c_char
+from ctypes import POINTER, windll, Structure, cast, CFUNCTYPE, c_int, c_uint, c_void_p, c_bool, sizeof, Union, c_ushort, c_ulong, c_long, c_char, byref
 from comtypes import GUID
 from ctypes.wintypes import HANDLE, DWORD, USHORT, HWND, WPARAM, ULONG, LONG, UINT, BYTE
 from datetime import datetime as dt
@@ -118,7 +118,8 @@ class RECT(Structure):
 
 
 class PAINTSTRUCT(Structure):
-    _fields_ = [('hdc', c_int), ('fErase', c_int), ('rcPaint', RECT), ('fRestore', c_int), ('fIncUpdate', c_int), ('rgbReserved', c_char * 32)]
+    _fields_ = [('hdc', c_int), ('fErase', c_int), ('rcPaint', RECT), ('fRestore', c_int), ('fIncUpdate', c_int),
+                ('rgbReserved', c_char * 32)]
 
 
 class POINT(Structure):
@@ -126,7 +127,8 @@ class POINT(Structure):
 
 
 class MSG(Structure):
-    _fields_ = [('hwnd', c_int), ('message', c_uint), ('wParam', c_int), ('lParam', c_int), ('time', c_int), ('pt', POINT)]
+    _fields_ = [('hwnd', c_int), ('message', c_uint), ('wParam', c_int), ('lParam', c_int), ('time', c_int),
+                ('pt', POINT)]
 
 
 class RAWINPUTDEVICE(Structure):
@@ -208,9 +210,19 @@ class RAWINPUT(Structure):
 
 
 def wndproc(hwnd, msg, wparam, lparam):
-    print(f"wndproc: {msg} w: {hex(wparam)} l: {hex(lparam)}")
+    try:
+        hwparam = hex(wparam)
+    except:
+        hwparam = wparam
+    try:
+        hlparam = hex(lparam)
+    except:
+        hlparam = lparam
+    
+    print(f"wndproc: {msg} w: {hwparam} l: {hlparam}")
     if msg == win32con.WM_POWERBROADCAST:
-        power_broadcast_wParams.get(wparam, lambda x: log_info(f'Unknown wParam for WM_POWERBROADCAST ({wparam})'))(lparam)
+        power_broadcast_wParams.get(
+            wparam, lambda x: log_info(f'Unknown wParam for WM_POWERBROADCAST ({wparam})'))(lparam)
         return True
 
     elif msg == win32con.WM_QUERYENDSESSION:
@@ -246,17 +258,17 @@ GetRawInputData = windll.user32.GetRawInputData
 
 
 def process_input(wParam, hRawInput):
-    print('input from background?:', wParam)
+    print('\n\ninput from background?:', wParam)
     RID_INPUT = 0x10000003
-    POINTER(c_int)
+    dwSize = c_uint(40)
     ri = RAWINPUT()
-    GetRawInputData(hRawInput, RID_INPUT, POINTER(ri), POINTER(c_int), sizeof(RAWINPUTHEADER))
+    GetRawInputData(hRawInput, RID_INPUT, byref(ri), byref(dwSize), sizeof(RAWINPUTHEADER))
     print('type:', ri.header.dwType)
     print('device:', ri.header.hDevice)
-    print('message:', ri.data.keyboard.Message)
-    print('vKey:', ri.data.keyboard.VKey)
-    print('scan code:', ri.data.keyboard.MakeCode)
-    print('state:', ri.data.keyboard.Flags)
+    print('message:', ri.keyboard.Message)
+    print('vKey:', ri.keyboard.VKey)
+    print('scan code:', ri.keyboard.MakeCode)
+    print('state:', ri.keyboard.Flags)
     pass
 
 
@@ -283,13 +295,15 @@ def run():
         win32con.WM_QUIT: wndproc,
         WM_INPUT: wndproc
     }
+    wndclass.lpfnWndProc = messageMap
 
     try:
         myWindowClass = win32gui.RegisterClass(wndclass)
         #hwnd = win32gui.CreateWindowEx(win32con.WS_EX_LEFT, myWindowClass, "PyWindow", 0, 0, 0, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, 0, 0,
         #                               hinst, None)
-        hwnd = win32gui.CreateWindowEx(win32con.WS_EX_LEFT, wndclass.lpszClassName, "PyWindow", 0, 0, 0, win32con.CW_USEDEFAULT,
-                                       win32con.CW_USEDEFAULT, win32con.NULL, win32con.NULL, hinst, None)
+        hwnd = win32gui.CreateWindowEx(win32con.WS_EX_LEFT, wndclass.lpszClassName, "PyWindow", 0, 0, 0,
+                                       win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.NULL, win32con.NULL,
+                                       hinst, None)
     except Exception as e:
         log_info("Exception: %s" % str(e))
 
@@ -326,9 +340,8 @@ def run():
     Rid[0].hwndTarget = hwnd
 
     RegisterRawInputDevices = windll.user32.RegisterRawInputDevices
+    print('registering raw input device')
     RegisterRawInputDevices(Rid, 1, sizeof(RAWINPUTDEVICE))
-
-    wndclass.lpfnWndProc = messageMap
 
     register_function = windll.user32.RegisterPowerSettingNotification
     hwnd_pointer = HANDLE(hwnd)
@@ -339,15 +352,11 @@ def run():
         #print('lastError:', win32api.GetLastError())
         #print()
 
-    #print('\nEntering loop')
+    print('\nEntering loop')
     while True:
         win32gui.PumpWaitingMessages()
         time.sleep(1)
         #print('.', end='', flush=True)
-
-
-if __name__ == "__main__":
-    run()
 
 
 def thread_run():
@@ -402,3 +411,6 @@ class SystemSuspend:
 
 
 triggers = {'display': Display, 'session end': SessionEnd, 'system suspend': SystemSuspend}
+
+if __name__ == "__main__":
+    run()
