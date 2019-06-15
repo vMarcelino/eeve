@@ -20,3 +20,4 @@ deploy:
   provider: pypi
   user: "vMarcelino"
   password: "$secret"
+  skip_existing: true
