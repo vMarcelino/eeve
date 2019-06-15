@@ -31,8 +31,12 @@ for fn in files:
                         if bump[j]:
                             ver_parts[j] += 1
                     new_ver = '.'.join(map(str, ver_parts))
+                    print('bumping version from', current_ver, 'to', new_ver, 'in', fn)
                     lines[i] = line.replace(current_ver, new_ver)
             except:
                 print('failed:', line)
     with open(fn, 'w') as f:
         f.writelines(lines)
+    print(fn, 'done')
+
+print('all bumps finished')
