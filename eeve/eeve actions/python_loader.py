@@ -34,4 +34,4 @@ def call_func(script_ref, func_name: str, *args, **kwargs):
     return {'result': getattr(script_ref, func_name)(*args, **kwargs)}
 
 
-actions = {'load script': {'run': load_script}, 'call function': {'run': call_func}}
+actions = {'load script': load_script, 'call function': call_func}

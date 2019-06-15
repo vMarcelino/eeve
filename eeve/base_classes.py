@@ -1,7 +1,9 @@
+import inspect
 from dataclasses import dataclass
 from typing import Union, Any, Callable, List, Tuple
-from eeve.wrapper import action_wrapper
 from travel_backpack import check_and_raise, except_and_print, format_exception_string
+
+from eeve.wrapper import action_wrapper
 
 
 @dataclass
@@ -12,7 +14,7 @@ class ActionTemplate:
     task_info_getter: Union[Callable, None] = None
     init_func: Union[Callable, None] = None
     init_class: Union[Callable, None] = None
-    description:str=''
+    description: str = ''
 
     @classmethod
     def make(cls, *action_init_args, name, action_info: Union[dict, Callable],
@@ -33,6 +35,9 @@ class ActionTemplate:
                 self.description = action_info['description']
 
             self.task_info_getter = action_info.get('task_info', None)
+
+        elif inspect.isfunction(action_info) or inspect.isbuiltin(action_info):
+            self.func = action_info
 
         else:
             self.init_class = action_info
@@ -164,7 +169,7 @@ class TriggerTemplate:
     name: str
     register: Callable
     unregister: Callable
-    description:str=''
+    description: str = ''
 
 
 @dataclass

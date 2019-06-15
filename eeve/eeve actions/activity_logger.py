@@ -100,8 +100,8 @@ class Timer(metaclass=Singleton):
 
         # initializes active process if it does not exists
         if active_process not in self.proc_log:
-            self.proc_log[active_process] = Process(
-                name=active_process, time=timedelta(), windows=dict())  # (time spent in seconds, window names)
+            self.proc_log[active_process] = Process(name=active_process, time=timedelta(),
+                                                    windows=dict())  # (time spent in seconds, window names)
 
         last_proc_info = self.proc_log[self.last_process_name].windows  # shortcut for last process's info
 
@@ -185,13 +185,7 @@ def initialize_logger(time: float, log_path: str):
 
 
 actions = {
-    'log activity': {
-        'run': log_activity
-    },
-    'log activity and current window': {
-        'run': log_activity_and_current_window
-    },
-    'start activity logger': {
-        'run': initialize_logger
-    }
+    'log activity': log_activity,
+    'log activity and current window': log_activity_and_current_window,
+    'start activity logger': initialize_logger
 }

@@ -12,19 +12,22 @@ from uuid import uuid4
 
 
 class WinLowLevelHook(metaclass=travel_backpack.Singleton):
-    hook_thread:threading.Thread
+    hook_thread: threading.Thread
+
     def __init__(self, keyboard_callback, mouse_callback):
         self.keyboard_callback = keyboard_callback
         self.mouse_callback = mouse_callback
-        self.KeyboardEvent = collections.namedtuple('KeyboardEvent', ['event_type', 'key_code', 'scan_code', 'alt_pressed', 'time', 'extra_info'])
-        self.MouseEvent = collections.namedtuple('MouseEvent', ['event_type', 'point', 'wheel_direction', 'injection', 'time'])
+        self.KeyboardEvent = collections.namedtuple(
+            'KeyboardEvent', ['event_type', 'key_code', 'scan_code', 'alt_pressed', 'time', 'extra_info'])
+        self.MouseEvent = collections.namedtuple('MouseEvent',
+                                                 ['event_type', 'point', 'wheel_direction', 'injection', 'time'])
 
         self.hook_id_keyboard = None
         self.hook_id_mouse = None
         self.running = False
 
     def stop(self):
-        self.running =False
+        self.running = False
 
     def start(self, asynchronous=True):
         if asynchronous:
@@ -57,13 +60,12 @@ class WinLowLevelHook(metaclass=travel_backpack.Singleton):
 
         def low_level_keyboard_handler(nCode, wParam, lParam):
             event = (nCode,
-                     self.KeyboardEvent(
-                         event_type=keyboard_event_types[wParam],
-                         key_code=lParam[0] & 0xFFFFFFFF,
-                         scan_code=lParam[1] & 0xFFFFFFFF,
-                         alt_pressed=lParam[2] == 32,
-                         time=lParam[3] & 0xFFFFFFFF if lParam[3] is not None else 0,
-                         extra_info=lParam[4]))  # unsigned int 64 for 32bit
+                     self.KeyboardEvent(event_type=keyboard_event_types[wParam],
+                                        key_code=lParam[0] & 0xFFFFFFFF,
+                                        scan_code=lParam[1] & 0xFFFFFFFF,
+                                        alt_pressed=lParam[2] == 32,
+                                        time=lParam[3] & 0xFFFFFFFF if lParam[3] is not None else 0,
+                                        extra_info=lParam[4]))  # unsigned int 64 for 32bit
             # Be a good neighbor and call the next hook.
             if self.keyboard_callback(event):
                 return ctypes.windll.user32.CallNextHookEx(self.hook_id_keyboard, nCode, wParam, lParam)
@@ -73,12 +75,11 @@ class WinLowLevelHook(metaclass=travel_backpack.Singleton):
 
         def low_level_mouse_handler(nCode, wParam, lParam):
             event = (nCode,
-                     self.MouseEvent(
-                         event_type=mouse_event_types.get(wParam, f'unknown ({hex(wParam)})'),
-                         point=lParam[0],
-                         wheel_direction=lParam[1],
-                         injection=lParam[2],
-                         time=lParam[3]))
+                     self.MouseEvent(event_type=mouse_event_types.get(wParam, f'unknown ({hex(wParam)})'),
+                                     point=lParam[0],
+                                     wheel_direction=lParam[1],
+                                     injection=lParam[2],
+                                     time=lParam[3]))
 
             if self.mouse_callback(event):
                 # Be a good neighbor and call the next hook.
@@ -99,7 +100,8 @@ class WinLowLevelHook(metaclass=travel_backpack.Singleton):
             p_mouse = pointer_mouse
             module_handle = win32api.GetModuleHandle(None)
             module_handle = 0
-            self.hook_id_keyboard = ctypes.windll.user32.SetWindowsHookExA(wh_keyboard_lo_level, p_keyoard, module_handle, 0)
+            self.hook_id_keyboard = ctypes.windll.user32.SetWindowsHookExA(wh_keyboard_lo_level, p_keyoard,
+                                                                           module_handle, 0)
             self.hook_id_mouse = ctypes.windll.user32.SetWindowsHookExA(wh_mouse_low_level, p_mouse, module_handle, 0)
 
         except Exception as ex:
@@ -150,7 +152,9 @@ class BaseKeyInfo:
             if not KeyHookWrapper().allowed_tags:
                 return False
             else:
-                if self.allowed_tag in KeyHookWrapper().allowed_tags or self.allowed_tag == 'any' or 'any' in KeyHookWrapper().allowed_tags:
+                if self.allowed_tag in KeyHookWrapper().allowed_tags or \
+                   self.allowed_tag == 'any' or \
+                   'any' in KeyHookWrapper().allowed_tags:
                     return True
                 else:
                     return False
@@ -189,9 +193,12 @@ class KeyCombinationInfo(BaseKeyInfo):
     def _next(self, char):
         res = True
         kd = [k.lower() for k in KeyHookWrapper().keys_down]
+        print()
         for c in self.chain:
             res = res and (c.lower() in kd)
-            #print(res, c)
+            print(res, c, (c.lower() in kd))
+
+        print()
 
         if res:
             self.func()
@@ -279,7 +286,8 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
 
     def add_keychain_callback(self, callback, keychain: str, swallow_key: bool, only_on_blocking_mode: bool):
         uuid = uuid4()
-        self.keychains[uuid] = KeychainInfo(chain=keychain, func=callback, allowed_tag=only_on_blocking_mode), swallow_key
+        self.keychains[uuid] = KeychainInfo(chain=keychain, func=callback,
+                                            allowed_tag=only_on_blocking_mode), swallow_key
         return uuid
 
     def remove_keychain_callback(self, uuid):
@@ -287,7 +295,8 @@ class KeyHookWrapper(metaclass=travel_backpack.Singleton):
 
     def add_keycombination_callback(self, callback, keys: str, swallow_key: bool, only_on_blocking_mode: bool):
         uuid = uuid4()
-        self.keychains[uuid] = KeyCombinationInfo(chain=keys, func=callback, allowed_tag=only_on_blocking_mode), swallow_key
+        self.keychains[uuid] = KeyCombinationInfo(chain=keys, func=callback,
+                                                  allowed_tag=only_on_blocking_mode), swallow_key
         return uuid
 
     def remove_keycombination_callback(self, uuid):
@@ -327,7 +336,7 @@ class RegisterKeychain:
 
 
 class RegisterKeyCombination:
-    def __init__(self, action, keys: str, swallow_last_key=False, only_on_blocking_mode=None):
+    def __init__(self, action, keys: str, swallow_last_key: bool = False, only_on_blocking_mode: bool = None):
         self.uuid = KeyHookWrapper().add_keycombination_callback(action, keys, swallow_last_key, only_on_blocking_mode)
 
     def unregister(self):
@@ -335,7 +344,8 @@ class RegisterKeyCombination:
 
 
 class SetKeyBlockingMode:
-    def run(self, value='any'):
+    @staticmethod
+    def toggle(value='any'):
         value = value.lower()
         kw = KeyHookWrapper()
         if value in kw.allowed_tags:
@@ -347,6 +357,26 @@ class SetKeyBlockingMode:
 
         print('key blocking mode is', kw.allowed_tags)
 
+    @staticmethod
+    def turn_on(value='any'):
+        value = value.lower()
+        kw = KeyHookWrapper()
+        if value not in kw.allowed_tags:
+            print('Adding', value, 'to allowed tags')
+            kw.allowed_tags.add(value)
+
+        print('key blocking mode is', kw.allowed_tags)
+
+    @staticmethod
+    def turn_off(value='any'):
+        value = value.lower()
+        kw = KeyHookWrapper()
+        if value in kw.allowed_tags:
+            print('Removing', value, 'from allowed tags')
+            kw.allowed_tags.remove(value)
+
+        print('key blocking mode is', kw.allowed_tags)
+
 
 triggers = {
     'key down': RegisterKeyDown,
@@ -355,7 +385,11 @@ triggers = {
     'keychain': RegisterKeychain,
     'keys down': RegisterKeyCombination
 }
-actions = {'toggle keychain mode': SetKeyBlockingMode}
+actions = {
+    'toggle keychain mode': SetKeyBlockingMode.toggle,
+    'set keychain mode': SetKeyBlockingMode.turn_on,
+    'unset keychain mode': SetKeyBlockingMode.turn_off
+}
 
 
 def main():

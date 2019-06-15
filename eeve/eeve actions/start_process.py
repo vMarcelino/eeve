@@ -16,4 +16,4 @@ def run(*args, windowed: bool = False, **kwargs):
     subprocess.Popen(args, **kwargs)
 
 
-actions = {'start process': {'run': run}}
+actions = {'start process': run}

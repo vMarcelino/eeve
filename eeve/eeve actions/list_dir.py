@@ -20,4 +20,4 @@ def run(path: str, return_full_path: bool = False):
     return {'file_list': result}
 
 
-actions = {"list dir": {'run': run}}
+actions = {"list dir":  run}

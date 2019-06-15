@@ -119,4 +119,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-actions = {"start gui": {'run': main}}
+actions = {"start gui": main}
