@@ -1,6 +1,6 @@
 """eeve - A flexible, powerfull and simple event trigger"""
 
-__version__ = '1.6.1'
+__version__ = '1.6.2'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
@@ -28,7 +28,35 @@ def main():
     global script_root
     print()
 
+    load_default_templates()
+
     from pathlib import Path
+    conf_root = os.path.join(Path.home(), 'Documents', 'eeve')
+    conf_file = os.path.join(conf_root, 'eeve events.txt')
+    conf_db_file = os.path.join(conf_root, 'eeve.db')
+
+    #database.open_db_file(None)
+    database.open_db_file(conf_db_file)
+
+    if os.path.isfile(conf_file):
+        with open(conf_file) as f:
+            _all_events = f.read().replace('|||\n', '').split('\n')
+
+        load_events_from_str_list(_all_events)
+
+        new_name_ext = '.done.' + travel_backpack.time_now_to_string(
+            separators=['.', '.', ' - ', '.', '.', '.']) + '.txt'
+        new_name = os.path.splitext(conf_file)[0] + new_name_ext
+        os.rename(src=conf_file, dst=new_name)
+    else:
+        print('no conf file at', conf_file)
+
+    load_events_from_db()
+
+
+def load_default_templates():
+    """Loads default trigger and actions templates from scripts
+    """
 
     script_root = os.path.dirname(os.path.realpath(__file__))
     load_triggers_from_path(os.path.join(script_root, 'eeve triggers'))
@@ -36,22 +64,6 @@ def main():
 
     load_triggers_from_path(os.path.join(script_root, 'eeve plugins'))
     load_actions_from_path(os.path.join(script_root, 'eeve plugins'))
-
-    conf_root = os.path.join(Path.home(), 'Documents', 'eeve')
-    #conf_file = os.path.join(conf_root, 'eeve events.txt')
-    conf_db_file = os.path.join(conf_root, 'eeve.db')
-    '''
-    if os.path.isfile(conf_file):
-        with open(conf_file) as f:
-            _all_events = f.read().replace('|||\n', '').split('\n')
-
-        load_events(_all_events)
-    else:
-        print('no conf file at', conf_file)
-    '''
-    #database.open_db_file(None)
-    database.open_db_file(conf_db_file)
-    load_events_from_db()
 
 
 def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dict, Callable]):
@@ -79,12 +91,13 @@ def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dic
         trigger_templates[name] = tt
 
     elif type(trigger) is dict:
-        trigger_templates[name] = TriggerTemplate(
-            name=name, register=trigger['register'], unregister=trigger['unregister'])
+        trigger_templates[name] = TriggerTemplate(name=name,
+                                                  register=trigger['register'],
+                                                  unregister=trigger['unregister'])
 
     else:
-        travel_backpack.check_and_raise(
-            hasattr(trigger, 'unregister'), 'trigger object must have "unregister" attribute', AttributeError)
+        travel_backpack.check_and_raise(hasattr(trigger, 'unregister'),
+                                        'trigger object must have "unregister" attribute', AttributeError)
         add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
 
@@ -128,8 +141,10 @@ def add_action_template(name: str, action_info: Union[Action, ActionTemplate, di
         action_templates[name] = at
 
     else:
-        action_templates[name] = ActionTemplate.make(
-            name=name, action_info=action_info, *action_init_args, **action_init_kwargs)
+        action_templates[name] = ActionTemplate.make(name=name,
+                                                     action_info=action_info,
+                                                     *action_init_args,
+                                                     **action_init_kwargs)
 
 
 def remove_action_template(name: str):
@@ -217,10 +232,12 @@ def load_events_from_db():
             print('failed to add event', ex)
 
     print()
+    session.close()
 
 
 def load_events_from_str_list(_all_events: list):
     print('--loading events--')
+    session = database.Session()
     for event in _all_events:
         if event and not event.startswith('#'):
             show_traceback = False
@@ -241,6 +258,7 @@ def load_events_from_str_list(_all_events: list):
 
                 raw_actions = helpers.strip_split(raw_actions, mappings.char_map[';'])
                 actions = []
+                actions_db = []
                 for action in raw_actions:
                     action_name, action_init_args, action_init_kwargs, action_run_args, action_run_kwargs = helpers.process_args(
                         action, return_init_args=True)
@@ -249,19 +267,40 @@ def load_events_from_str_list(_all_events: list):
                     if _action_template.init_func:
                         _action_template.reinitialize_with_args(*action_init_args, **action_init_kwargs)
                     _action = Action(*action_run_args, action_info=_action_template, **action_run_kwargs)
+
+                    arg_list_db = []
+                    for arg in action_run_args:
+                        arg_list_db.append(database.ActionArgument(value=arg))
+
+                    for k, v in action_run_kwargs.items():
+                        arg_list_db.append(database.ActionArgument(key=k, value=v))
+
+                    _action_db = database.Action(name=action_name, arguments=arg_list_db)
+
                     actions.append(_action)
+                    actions_db.append(_action_db)
 
                 task = Task(actions, debug=show_traceback, verbose=verbose)
-                trigger = Trigger.make(
-                    *trigger_args, template=trigger_templates[trigger], **trigger_kwargs)  # pre-initializes the trigger
+                task_db = database.Task(actions=actions_db)
+                trigger_db = database.Trigger(
+                    name=trigger,
+                    arguments=[database.TriggerArgument(value=v) for v in trigger_args] +
+                    [database.TriggerArgument(key=k, value=v) for k, v in trigger_kwargs.items()])
+                trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger],
+                                       **trigger_kwargs)  # pre-initializes the trigger
                 print('Starting trigger')
                 event = Event(triggers=[trigger], task=task)  # starts the trigger
                 print('Trigger started')
+                event_db = database.Event(name=event.name, enabled=event.enabled, task=task_db, triggers=[trigger_db])
+                session.add(event_db)
+                session.commit()  # to generate id in event_db
+                event.tag = event_db.id
                 events.append(event)
 
             except Exception as ex:
                 show_traceback = True
                 print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
+                session.rollback()
 
     print('--events loaded--')
     print()

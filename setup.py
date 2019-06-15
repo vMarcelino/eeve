@@ -15,12 +15,12 @@ def read(filename):
 
 setup(
     name="eeve",
-    version="1.6.1",
+    version="1.6.2",
     url="https://github.com/vMarcelino/eeve",
     license='MIT',
     author="Victor Marcelino",
     author_email="victor.fmarcelino@gmail.com",
-    description="A flexible, powerfull and simple event trigger",
+    description="A simple, flexible and powerfull event trigger",
     long_description=read("README.rst"),
     packages=find_packages(exclude=('tests', )),
     install_requires=[],
@@ -35,5 +35,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )
