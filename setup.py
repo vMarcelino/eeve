@@ -15,7 +15,7 @@ def read(filename):
 
 setup(
     name="eeve",
-    version="1.6.2",
+    version="1.6.3",
     url="https://github.com/vMarcelino/eeve",
     license='MIT',
     author="Victor Marcelino",

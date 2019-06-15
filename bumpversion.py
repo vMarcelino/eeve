@@ -1,5 +1,15 @@
 files = ['setup.py', 'pyproject.toml', 'eeve/__init__.py']
-bump = [False, True, False]
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--major', action='store_true', default=False, help='to bump major version number')
+parser.add_argument('--minor', action='store_true', default=False, help='to bump minor version number')
+parser.add_argument('--micro', action='store_true', default=False, help='to bump micro version number')
+
+args = parser.parse_args()
+
+bump = [args.major, args.minor, args.micro]
 for fn in files:
     lines = ['ERROR']
     with open(fn, 'r') as f:

@@ -15,7 +15,8 @@ install:
 
 script:
   - pytest --ignore "./eeve/eeve actions/test_action.py"
-
+before_deploy:
+  - python bumpversion.py --micro
 deploy:
   provider: pypi
   user: "vMarcelino"
