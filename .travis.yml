@@ -14,7 +14,6 @@ install:
   - pip install -e .
 
 script:
-  - pip install -e .
   - pytest --ignore "./eeve/eeve actions/test_action.py"
 
 deploy:
