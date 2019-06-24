@@ -15,12 +15,12 @@ install:
 
 script:
   - pytest --ignore "./eeve/eeve actions/test_action.py"
-before_deploy:
-  - python bumpversion.py --micro
+#before_deploy:
+#  - python bumpversion.py --micro
 deploy:
   provider: pypi
   user: "vMarcelino"
   password:
     secure: EdkGWo+Xeeb1o89JASahzUA5QiE7AZjJr9xNvjpEaE1kN2lem9xJtgDPWXtUgn735z5OLTOubkHONFBWJfKLiBo9Ic8CEJkvJf2wIM69aN6NilSNbIeSxS1+R9dA7MqEicYHl93f1N7JoKG4/1XLd991LTgZyVoMLGd1QyL1hVKXHss/NnC/mJVvgGKiyB3Zgt7fboan80t/vlm59GMkw796qMai2vecd0fzBV/x+0oZcJ+0TWYNYryEUDtT0ySmfaKbyzG33SWJeATKIt6tCnyaRKULze3eDwbIEYRASSGgzE8P8DUrlXi+pyCVUVUFyuPNhyBuLzULKWE5LhZlmm/JIYGyEK3zWBmZJLdeJM3EDmY2SM/z48ySpoNxMVC8xzDhRv/irFJSH26XCfuhSnLZ8RmxUo9eSQlrxe+f7AXWQiw4BJp0/M+FPqmiuGU/xO9jbjrqlAPff08jTOyP+0jg9P7dFwWf0YQb5ahwlpJJIDHwKwg299i0aQJ2MrlTs3wUoc7SMWHxET0+ji7WaNdRFvrBjcv693XMKClRAHTCGilSSGQfbQKWV//VmfW8SRQ+speFSrxBppwFbJbK64U25a+lQECc/VLLSKM44kpCdJinjbpjZO7LAKPKgmZrIyCzga2RWPUjnnqtpnBN4Ie+NRJWJyWdEpMjk2OFMpA=
   skip_existing: true
-  skip_cleanup: true
+#  skip_cleanup: true
