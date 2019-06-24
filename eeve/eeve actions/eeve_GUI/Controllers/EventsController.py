@@ -87,10 +87,6 @@ class EventsController(GuiController):
             for file_name in filedialog:
                 travel_backpack.copy(file_name, destination_path, dst_is_file=False)
 
-        if filedialog:
-            for file_name in filedialog:
-                travel_backpack.copy(file_name, destination_path, dst_is_file=False)
-
             eeve.load_triggers_from_path(destination_path)
             eeve.load_actions_from_path(destination_path)
             print()
