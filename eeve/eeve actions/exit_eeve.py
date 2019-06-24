@@ -9,10 +9,11 @@ def exit_eeve(exit_value: int = 0):
     Keyword Arguments:
         exit_value {int} -- the exxit code to return (default: {0})
     """
+    print('unregistering')
     for event in eeve.events:
         event.unregister()
 
-    exit()
+    print('exiting')
     sys.exit(exit_value)
 
 
