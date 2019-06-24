@@ -218,8 +218,10 @@ def wndproc(hwnd, msg, wparam, lparam):
         hlparam = hex(lparam)
     except:
         hlparam = lparam
-    
-    print(f"wndproc: {msg} w: {hwparam} l: {hlparam}")
+
+    if msg != WM_INPUT:
+        print(f"wndproc: {msg} w: {hwparam} l: {hlparam}")
+
     if msg == win32con.WM_POWERBROADCAST:
         power_broadcast_wParams.get(
             wparam, lambda x: log_info(f'Unknown wParam for WM_POWERBROADCAST ({wparam})'))(lparam)
@@ -258,17 +260,17 @@ GetRawInputData = windll.user32.GetRawInputData
 
 
 def process_input(wParam, hRawInput):
-    print('\n\ninput from background?:', wParam)
+    #print('\n\ninput from background?:', wParam)
     RID_INPUT = 0x10000003
     dwSize = c_uint(40)
     ri = RAWINPUT()
     GetRawInputData(hRawInput, RID_INPUT, byref(ri), byref(dwSize), sizeof(RAWINPUTHEADER))
-    print('type:', ri.header.dwType)
+    #print('type:', ri.header.dwType)
     print('device:', ri.header.hDevice)
-    print('message:', ri.keyboard.Message)
-    print('vKey:', ri.keyboard.VKey)
-    print('scan code:', ri.keyboard.MakeCode)
-    print('state:', ri.keyboard.Flags)
+    #print('message:', ri.keyboard.Message)
+    #print('vKey:', ri.keyboard.VKey)
+    #print('scan code:', ri.keyboard.MakeCode)
+    #print('state:', ri.keyboard.Flags)
     pass
 
 
