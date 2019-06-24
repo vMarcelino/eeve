@@ -93,7 +93,13 @@ class Discoverer(metaclass=travel_backpack.Singleton):
 
 
 class RegisterTrigger:
-    def __init__(self, action, trigger_status, mult='single', timeout=1, time_between_pings=2, threshold=10):
+    def __init__(self,
+                 action,
+                 trigger_status: str,
+                 mult: str = 'single',
+                 timeout: float = 1,
+                 time_between_pings: float = 2,
+                 threshold: float = 10):
         from uuid import uuid4
         self.uuid = uuid4()
         self.mult = mult
@@ -127,24 +133,53 @@ class RegisterTrigger:
                 del d.multi_disconnect_event[self.uuid]
 
 
-def set_device_property(device, brightness=None, temperature=None, is_on=None):
+def set_device_property(device: 'Union[Device, str]',
+                        brightness: int = None,
+                        temperature: int = None,
+                        is_on: bool = None,
+                        mode: str = None,
+                        verbose: bool = False):
+    """Sets the given device property if not None
+    
+    Arguments:
+        device {Union[Device, str]} -- The device reference or the device name
+    
+    Keyword Arguments:
+        brightness {int} -- the brightness of the device (1-100) (default: {None})
+        temperature {int} -- the color temperature of the device in Kelvin (2700-6300) (default: {None})
+        is_on {bool} -- To set the device on or off (default: {None})
+        mode {str} -- The device mode. Usually 'circadian' (default: {None})
+        verbose {bool} -- Whether to print the device state after the property set (default:{True})
+    """
     if type(device) is str:
         print('Getting discoverer')
         d = Discoverer()
         for dev_wrapper, dev in [(dv, dv.device) for dv in d.current_device_set if dv.alias == device]:
-            print('setting property from', dev_wrapper.alias)
-            set_device_property(dev, brightness, temperature, is_on)
+            print('found device:', dev_wrapper.alias)
+            set_device_property(dev, brightness, temperature, is_on, mode, verbose)
 
     else:
         if is_on is not None:
             if is_on:
+                print('Turning device on')
                 device.turn_on()
             else:
+                print('Turning device off')
                 device.turn_off()
         if brightness is not None:
+            print('setting brightness to', brightness)
             device.brightness = brightness
         if temperature is not None:
+            print('setting temperature to', temperature)
             device.color_temp = temperature
+        if mode is not None:
+            print('setting mode to', mode)
+            device._query_helper('smartlife.iot.smartbulb.lightingservice', 'transition_light_state', {'mode': mode})
+        if verbose:
+            from pprint import pprint
+            pprint(device.get_light_state())
+
+        print("Done setting device's property")
 
 
 actions = {'set TP-Link device property': {'run': set_device_property, 'init': Discover}}
