@@ -78,12 +78,12 @@ class TriggerArgument(Base):
 engine = Session = None
 
 
-def open_db_file(path: str):
+def open_db_file(path: str, verbose: bool = False):
     global engine, Session
     if path:
-        engine = create_engine(f'sqlite:///{path}', echo=True)
+        engine = create_engine(f'sqlite:///{path}', echo=verbose)
     else:
-        engine = create_engine('sqlite:///:memory:', echo=True)
+        engine = create_engine('sqlite:///:memory:', echo=verbose)
     Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
