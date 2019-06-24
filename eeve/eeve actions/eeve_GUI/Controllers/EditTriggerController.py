@@ -1,11 +1,19 @@
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QAbstractListModel  # pylint: disable=no-name-in-module
 from PyQt5.QtWidgets import QMessageBox  # pylint: disable=no-name-in-module
 import inspect
+from typing import Any, List
+from dataclasses import dataclass
 
 import eeve
 from eeve.base_classes import Event, Trigger, Task, Action
 from .. import GuiController  # pylint: disable=relative-beyond-top-level
-from eeve import database
+from eeve import database, helpers
+
+
+@dataclass
+class Argument:
+    value: Any
+    key: str = None
 
 
 class EditTriggerController(GuiController):
@@ -89,12 +97,35 @@ class EditTriggerController(GuiController):
         result.setProperty("currentIndex", index)
 
         result = root.findChild(QAbstractListModel, "listmodelargs")
-        for i, trigger_arg in enumerate(self.trigger.args):
-            value = {"value": str(trigger_arg), 'tag': i}
+
+        self.arguments: List[Argument] = []
+        for trigger_arg in self.trigger.args:
+            self.arguments.append(Argument(value=str(trigger_arg)))
+
+        for k, v in self.trigger.kwargs.items():
+            self.arguments.append(Argument(key=k, value=str(v)))
+
+        for i, trigger_arg in enumerate(self.arguments):
+            if trigger_arg.key is not None:
+                value = {"value": trigger_arg.key + '=' + str(trigger_arg.value), 'tag': i}
+            else:
+                value = {"value": str(trigger_arg.value), 'tag': i}
             self.invoke(result, 'addItem', value)
 
     def unload_page(self):
         print('unloading page')
+        self.trigger.args = list(self.trigger.args)  # make sure it is a list
+        self.trigger.args.clear()
+        self.trigger.kwargs.clear()
+        self.database_ref.arguments.clear()
+        for arg in self.arguments:
+            if arg.key:
+                self.trigger.kwargs[arg.key] = helpers.get_true_value(arg.value)
+                self.database_ref.arguments.append(database.TriggerArgument(key=arg.key, value=arg.value))
+            else:
+                self.trigger.args.append(helpers.get_true_value(arg.value))
+                self.database_ref.arguments.append(database.TriggerArgument(value=arg.value))
+
         return self.trigger, self.database_ref
 
     @pyqtSlot()
@@ -112,11 +143,14 @@ class EditTriggerController(GuiController):
     @pyqtSlot(int, str)
     def argsChanged(self, index, value):
         print(index, value)
-        #if '=' in value:
+        key = None
+        if '=' in value:  # if is kwarg
+            key, value = value.split('=', maxsplit=1)
 
-        self.trigger.args = list(self.trigger.args)
-        self.trigger.args[index] = value
-        self.database_ref.arguments[index].value = value
+        if key:  # if is not None nor empty
+            self.arguments[index] = Argument(key=key, value=value)
+        else:
+            self.arguments[index] = Argument(value=value)
 
     @pyqtSlot()
     def addTriggerArgument(self):
@@ -124,12 +158,10 @@ class EditTriggerController(GuiController):
         root = root[0]
         result = root.findChild(QAbstractListModel, "listmodelargs")
 
-        i = len(self.trigger.args)
-        self.trigger.args = list(self.trigger.args)
-        self.trigger.args.append(f'arg {i}')
-        self.database_ref.arguments.append(database.TriggerArgument(value=f'arg {i}'))
+        i = len(self.arguments)
+        self.arguments.append(Argument(value=f'arg {i}'))
 
-        self.invoke(result, "addItem", {'value': self.trigger.args[i], 'tag': i})
+        self.invoke(result, "addItem", {'value': self.arguments[i].value, 'tag': i})
 
     @pyqtSlot(int)
     def deleteArg(self, index):
