@@ -25,7 +25,6 @@ script_root: str = ''
 
 
 def main():
-    global script_root
     print()
 
     load_default_templates()
@@ -57,6 +56,7 @@ def main():
 def load_default_templates():
     """Loads default trigger and actions templates from scripts
     """
+    global script_root
 
     script_root = os.path.dirname(os.path.realpath(__file__))
     load_triggers_from_path(os.path.join(script_root, 'eeve triggers'))
@@ -206,9 +206,9 @@ def load_events_from_db():
                 trigger_kwargs = {}
                 for arg in trigger.arguments:
                     if arg.key is not None:
-                        trigger_kwargs[arg.key] = arg.value
+                        trigger_kwargs[arg.key] = helpers.get_true_value(arg.value)
                     else:
-                        trigger_args.append(arg.value)
+                        trigger_args.append(helpers.get_true_value(arg.value))
 
                 triggers.append(Trigger.make(*trigger_args, template=trigger_templates[trigger.name], **trigger_kwargs))
 
@@ -219,9 +219,9 @@ def load_events_from_db():
                 action_kwargs = {}
                 for arg in action.arguments:
                     if arg.key is not None:
-                        action_kwargs[arg.key] = arg.value
+                        action_kwargs[arg.key] = helpers.get_true_value(arg.value)
                     else:
-                        action_args.append(arg.value)
+                        action_args.append(helpers.get_true_value(arg.value))
 
                 actions.append(Action(*action_args, action_info=action_templates[action.name], **action_kwargs))
 
@@ -243,6 +243,7 @@ def load_events_from_str_list(_all_events: list):
             show_traceback = False
             verbose = 1
             print(f'loading [{event}]')
+            ev_name = None
             while event.startswith('['):
                 if event.startswith('[test]'):
                     show_traceback = True
@@ -250,6 +251,11 @@ def load_events_from_str_list(_all_events: list):
                 elif event.startswith('[no verbose]'):
                     verbose = 0
                     event = event[len('[no verbose]'):]
+                elif event.startswith('[name:'):
+                    ev_name = event[6:].split(']', maxsplit=1)[0]
+                    event = event[6 + len(ev_name) + 1:]
+                    ev_name = ev_name.strip()
+
             try:
                 event = mappings.remap(event)
                 trigger, raw_actions = helpers.strip_split(event, mappings.char_map['->'], maxsplit=1)
@@ -270,10 +276,10 @@ def load_events_from_str_list(_all_events: list):
 
                     arg_list_db = []
                     for arg in action_run_args:
-                        arg_list_db.append(database.ActionArgument(value=arg))
+                        arg_list_db.append(database.ActionArgument(value=str(arg)))
 
                     for k, v in action_run_kwargs.items():
-                        arg_list_db.append(database.ActionArgument(key=k, value=v))
+                        arg_list_db.append(database.ActionArgument(key=k, value=str(v)))
 
                     _action_db = database.Action(name=action_name, arguments=arg_list_db)
 
@@ -284,12 +290,12 @@ def load_events_from_str_list(_all_events: list):
                 task_db = database.Task(actions=actions_db)
                 trigger_db = database.Trigger(
                     name=trigger,
-                    arguments=[database.TriggerArgument(value=v) for v in trigger_args] +
-                    [database.TriggerArgument(key=k, value=v) for k, v in trigger_kwargs.items()])
+                    arguments=[database.TriggerArgument(value=str(v)) for v in trigger_args] +
+                    [database.TriggerArgument(key=k, value=str(v)) for k, v in trigger_kwargs.items()])
                 trigger = Trigger.make(*trigger_args, template=trigger_templates[trigger],
                                        **trigger_kwargs)  # pre-initializes the trigger
                 print('Starting trigger')
-                event = Event(triggers=[trigger], task=task)  # starts the trigger
+                event = Event(name=ev_name, triggers=[trigger], task=task)  # starts the trigger
                 print('Trigger started')
                 event_db = database.Event(name=event.name, enabled=event.enabled, task=task_db, triggers=[trigger_db])
                 session.add(event_db)
