@@ -5,6 +5,7 @@ from eeve.taskinfo import TaskInfo
 from typing import List
 
 import travel_backpack
+import travel_backpack.exceptions
 import sys
 global_variables = VariableGroup()
 global_variables['stdout'] = sys.stdout
@@ -62,4 +63,4 @@ def action_wrapper(actions: 'List[Action]', debug=False, verbose=1):
             print('task end with index', task_info.current_action_index)
             print()
 
-    return travel_backpack.except_and_print(travel_backpack.thread_encapsulation(start_task))
+    return travel_backpack.exceptions.except_and_print(travel_backpack.thread_encapsulation(start_task))

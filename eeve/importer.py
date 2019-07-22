@@ -1,7 +1,7 @@
 import os
 import sys
 import importlib
-import travel_backpack
+import travel_backpack.exceptions
 
 
 def import_from_folder(folder):
@@ -27,6 +27,6 @@ def import_from_folder(folder):
                     imported_files.append(importlib.import_module(module_name))
 
         except Exception as ex:
-            print(travel_backpack.format_exception_string(ex))
+            print(travel_backpack.exceptions.format_exception_string(ex))
 
     return imported_files

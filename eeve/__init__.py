@@ -4,7 +4,8 @@ __version__ = '1.6.3'
 __author__ = 'Victor Marcelino <victor.fmarcelino@gmail.com>'
 __all__ = []
 
-import travel_backpack
+import travel_backpack.exceptions
+import travel_backpack.time
 import os
 
 from . import helpers
@@ -43,7 +44,7 @@ def main():
 
         load_events_from_str_list(_all_events)
 
-        new_name_ext = '.done.' + travel_backpack.time_now_to_string(
+        new_name_ext = '.done.' + travel_backpack.time.time_now_to_string(
             separators=['.', '.', ' - ', '.', '.', '.']) + '.txt'
         new_name = os.path.splitext(conf_file)[0] + new_name_ext
         os.rename(src=conf_file, dst=new_name)
@@ -96,7 +97,7 @@ def add_trigger_template(name: str, trigger: Union[Trigger, TriggerTemplate, dic
                                                   unregister=trigger['unregister'])
 
     else:
-        travel_backpack.check_and_raise(hasattr(trigger, 'unregister'),
+        travel_backpack.exceptions.check_and_raise(hasattr(trigger, 'unregister'),
                                         'trigger object must have "unregister" attribute', AttributeError)
         add_trigger_template(name=name, trigger={'register': trigger, 'unregister': trigger.unregister})
 
@@ -151,7 +152,7 @@ def remove_action_template(name: str):
     """Removes an ActionTemplate from eeve
     
     Arguments:
-        name {str} -- Name o ActionTemplate to remove
+        name {str} -- Name or ActionTemplate to remove
     """
     if name in action_templates:
         del action_templates[name]
@@ -305,7 +306,7 @@ def load_events_from_str_list(_all_events: list):
 
             except Exception as ex:
                 show_traceback = True
-                print('invalid event:', (ex if not show_traceback else travel_backpack.format_exception_string(ex)))
+                print('invalid event:', (ex if not show_traceback else travel_backpack.exceptions.format_exception_string(ex)))
                 session.rollback()
 
     print('--events loaded--')

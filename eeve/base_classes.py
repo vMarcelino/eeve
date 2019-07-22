@@ -1,7 +1,7 @@
 import inspect
 from dataclasses import dataclass
 from typing import Union, Any, Callable, List, Tuple
-from travel_backpack import check_and_raise, except_and_print, format_exception_string
+from travel_backpack.exceptions import check_and_raise, except_and_print, format_exception_string
 
 from eeve.wrapper import action_wrapper
 

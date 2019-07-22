@@ -60,8 +60,8 @@ class InputParser:
         except KeyError as ke:
             print('\nkey error:', ke)
         except Exception as ex:
-            import travel_backpack
-            print(travel_backpack.format_exception_string(ex))
+            import travel_backpack.exceptions
+            print(travel_backpack.exceptions.format_exception_string(ex))
 
         if self.key_up_callback is not None:
             return self.key_up_callback(key_name)

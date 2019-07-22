@@ -4,8 +4,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 print(f'Migrated to {os.getcwd()}')
 
 try:
-    import travel_backpack
-    travel_backpack.log_stdout('output.log')
+    import travel_backpack.logging
+    travel_backpack.logging.log_stdout('output.log')
     print('\n\n\n\nlogging from travel-backpack')
 except:
     import sys

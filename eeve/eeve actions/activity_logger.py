@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import math
 from time import sleep
-from travel_backpack import Singleton, thread_encapsulation, time_now_to_string, except_and_print
+from travel_backpack import Singleton, thread_encapsulation
+from travel_backpack.time import time_now_to_string
+from travel_backpack.exceptions import except_and_print
 import win32gui, win32process, psutil
 import os
 from dataclasses import dataclass
