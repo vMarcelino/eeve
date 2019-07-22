@@ -328,7 +328,7 @@ class RegisterMouseMove:
 
 
 class RegisterKeychain:
-    def __init__(self, action, keychain: str, swallow_key=False, only_on_blocking_mode=None):
+    def __init__(self, action, keychain: str, swallow_key: bool = False, only_on_blocking_mode: str = None):
         self.uuid = KeyHookWrapper().add_keychain_callback(action, keychain, swallow_key, only_on_blocking_mode)
 
     def unregister(self):
@@ -336,7 +336,7 @@ class RegisterKeychain:
 
 
 class RegisterKeyCombination:
-    def __init__(self, action, keys: str, swallow_last_key: bool = False, only_on_blocking_mode: bool = None):
+    def __init__(self, action, keys: str, swallow_last_key: bool = False, only_on_blocking_mode: str = None):
         self.uuid = KeyHookWrapper().add_keycombination_callback(action, keys, swallow_last_key, only_on_blocking_mode)
 
     def unregister(self):
