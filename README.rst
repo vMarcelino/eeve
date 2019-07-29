@@ -24,13 +24,13 @@ Default GUI Usage
 The program flow is split in 3 main components:
 Actions, triggers and events. 
 
-Actions are the execution, they can vary from opening an app to 
+**Actions** are the execution, they can vary from opening an app to 
 sending a keystroke to the OS. They are *what* happens. 
 
-Triggers make events happen. They usually run in background 
-and activate events. 
+**Triggers** make events happen. They usually run in background 
+and activate events. They are *when* it happens. 
 
-Events are the glue between triggers and actions. 
+**Events** are the glue between triggers and actions. 
 It can contain many triggers and many actions. When
 an event is activated, it runs its actions in sequence. 
 You can add many triggers to an event and every time one of the
@@ -42,6 +42,20 @@ can be accessed using the (?) button on the editing page. The
 documentation is up to the trigger or action's developer to write.
 However, eeve also shows what arguments the action or trigger accepts
 by analyzing the code. 
+
+**Variables** can also be used in actions. They can be from one of the three types:
+*local variables*, that live while the event is running and are deleted as soon as the
+last action is run. They can be accessed only by the actions inside that single run.
+You can access them in a argument by a single $. 
+Eg: $count
+
+*event variables* (AKA task variables), that are accessible from any action from the event and are deleted when
+eeve stops running or the event is deleted. You can access them by using two $
+Eg: $$count
+
+*global variables*, that are accessible by any action running, regardless of the 
+event. They are deleted when eeve stops running. You can access them by using three $
+Eg: $$$count
 
 
 Installation
